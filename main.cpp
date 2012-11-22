@@ -932,8 +932,8 @@ int depth_stats(vector<string> params) {
         cout << "Largest gap:    " << gap_store.back() << '\n';
 
 
-        for (int i = 1; i < min(gap_store.size() - 1, 4); i++) {
-            cout << toStr<int>(i) << "th Largest gap:    " << *(gap_store.end() - i - 1) << '\n';
+        for (int i = 1; i < min(gap_store.size() - 1, 10); i++) {
+            cout << toStr<int>(i+1) << "th Largest gap:    " << *(gap_store.end() - i - 1) << '\n';
         }
         // compute average gap length
         int64_t avg_len = 0;
