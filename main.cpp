@@ -928,8 +928,9 @@ int depth_stats(vector<string> params) {
 
     cout << "Largest contig: " << contig_store.back() << '\n';
     
-    if(gap_store.size() > 0){
+    if(gap_store.size() > 0) {
         cout << "Largest gap:    " << gap_store.back() << '\n';
+
 
         for (int i = 1; i < min(gap_store.size() - 1, 4); i++) {
             cout << toStr<int>(i) << "th Largest gap:    " << *(gap_store.end() - i - 1) << '\n';
@@ -989,11 +990,12 @@ int depth_stats(vector<string> params) {
 
         }
 
-    }
+        for (vector<int>::iterator it = depth_100.begin(); it != depth_100.end(); it++) {
+            cerr << (*it) / 100.0 << '\n';
+        }
 
-    for(vector<int>::iterator it = depth_100.begin();it != depth_100.end();it++){
-        cerr << (*it)/100.0 << '\n';
     }
+    
     return 0;
 }
 
