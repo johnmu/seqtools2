@@ -927,66 +927,67 @@ int depth_stats(vector<string> params) {
     cout << "Average depth: " << (depth_sum/chr_len) << '\n';
 
     cout << "Largest contig: " << contig_store.back() << '\n';
-    cout << "Largest gap:    " << gap_store.back() << '\n';
+    
+    if(gap_store.size() > 0){
+        cout << "Largest gap:    " << gap_store.back() << '\n';
 
-    if(gap_store.size())
-    cout << "2nd Largest gap:    " << *(gap_store.end()-2) << '\n';
-    cout << "3rd Largest gap:    " << *(gap_store.end()-3) << '\n';
-    cout << "4th Largest gap:    " << *(gap_store.end()-4) << '\n';
-    cout << "5th Largest gap:    " << *(gap_store.end()-5) << '\n';
-
-    // compute average gap length
-    int64_t avg_len = 0;
-    for(vector<int64_t>::iterator it = gap_store.begin();it != gap_store.end();it++){
-        avg_len += *it;
-    }
-
-    cout << "Average gap:    " << (avg_len-gap_store.back())/((double)gap_store.size() - 1.0) << '\n';
-
-    cout << "Median gap:    " << *(gap_store.end()-(gap_store.size()/2)) << '\n';
-
-    cout << "--- Contig lengths -- \n";
-
-    int64_t length_count[9] = {1ll,10ll,100ll,1000ll,10000ll,100000ll,1000000ll,10000000ll,100000000ll};
-    int64_t mult = 10ll;
-    for (int i = 0;i<9;i++){
-        int64_t lower = length_count[i];
-        int64_t upper = ((mult*length_count[i])-1);
-        cout << lower << " - " << upper << ":";
-
-        vector<int64_t>::iterator start = lower_bound(contig_store.begin(),contig_store.end(),lower);
-        vector<int64_t>::iterator end = lower_bound(contig_store.begin(),contig_store.end(),upper);
-
-        int counter = 0;
-        for (vector<int64_t>::iterator it = start;it!=end;it++){
-            if (*it <= upper && *it >= lower){
-                counter++;
-            }
+        for (int i = 1; i < min(gap_store.size() - 1, 4); i++) {
+            cout << toStr<int>(i) << "th Largest gap:    " << *(gap_store.end() - i - 1) << '\n';
+        }
+        // compute average gap length
+        int64_t avg_len = 0;
+        for (vector<int64_t>::iterator it = gap_store.begin(); it != gap_store.end(); it++) {
+            avg_len += *it;
         }
 
-        cout << counter << '\n';
+        cout << "Average gap:    " << (avg_len - gap_store.back()) / ((double) gap_store.size() - 1.0) << '\n';
 
-    }
+        cout << "Median gap:    " << *(gap_store.end()-(gap_store.size() / 2)) << '\n';
 
-    cout << "--- Gap lengths -- \n";
+        cout << "--- Contig lengths -- \n";
 
+        int64_t length_count[9] = {1ll, 10ll, 100ll, 1000ll, 10000ll, 100000ll, 1000000ll, 10000000ll, 100000000ll};
+        int64_t mult = 10ll;
+        for (int i = 0; i < 9; i++) {
+            int64_t lower = length_count[i];
+            int64_t upper = ((mult * length_count[i]) - 1);
+            cout << lower << " - " << upper << ":";
 
-    for (int i = 0;i<9;i++){
-        int64_t lower = length_count[i];
-        int64_t upper = ((mult*length_count[i])-1);
-        cout << lower << " - " << upper << ":";
+            vector<int64_t>::iterator start = lower_bound(contig_store.begin(), contig_store.end(), lower);
+            vector<int64_t>::iterator end = lower_bound(contig_store.begin(), contig_store.end(), upper);
 
-        vector<int64_t>::iterator start = lower_bound(gap_store.begin(),gap_store.end(),lower);
-        vector<int64_t>::iterator end = lower_bound(gap_store.begin(),gap_store.end(),upper);
-
-        int counter = 0;
-        for (vector<int64_t>::iterator it = start;it!=end;it++){
-            if (*it <= upper && *it >= lower){
-                counter++;
+            int counter = 0;
+            for (vector<int64_t>::iterator it = start; it != end; it++) {
+                if (*it <= upper && *it >= lower) {
+                    counter++;
+                }
             }
+
+            cout << counter << '\n';
+
         }
 
-        cout << counter << '\n';
+        cout << "--- Gap lengths -- \n";
+
+
+        for (int i = 0; i < 9; i++) {
+            int64_t lower = length_count[i];
+            int64_t upper = ((mult * length_count[i]) - 1);
+            cout << lower << " - " << upper << ":";
+
+            vector<int64_t>::iterator start = lower_bound(gap_store.begin(), gap_store.end(), lower);
+            vector<int64_t>::iterator end = lower_bound(gap_store.begin(), gap_store.end(), upper);
+
+            int counter = 0;
+            for (vector<int64_t>::iterator it = start; it != end; it++) {
+                if (*it <= upper && *it >= lower) {
+                    counter++;
+                }
+            }
+
+            cout << counter << '\n';
+
+        }
 
     }
 
