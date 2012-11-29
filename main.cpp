@@ -1452,6 +1452,177 @@ int replace_sam_quals(vector<string> params) {
     return 0;
 }
 
+// temp thing for annoying thing
+int replace_sam_quals_diff(vector<string> params) {
+    string usage_text = "Usage: " + PROG_NAME + " replace_sam_quals_diff <SAM_file> <offset> <window_size> <quals_file>\n"
+            + "Offset typically 33 (illumina 1.8+,sanger) or 64 (illumina 1.3+)\n"
+            + "replace quals in SAM file with new ones!";
+
+
+    if (params.size() != 3) {
+        cerr << usage_text << endl;
+        return 3;
+    }
+
+    string filename = params[0];
+    int offset = strTo<int>(params[1]);
+    int wsize  = strTo<int>(params[2]);
+    string quals_filename = params[3];
+    
+    ifstream infile;
+
+    infile.open(quals_filename.c_str(), ios::in);
+
+    if (!infile.is_open()) {
+        cerr << "Error: cannot open quals file: " << quals_filename << '\n';
+        return 3;
+    }
+
+    infile.close();
+    
+
+    infile.open(filename.c_str(), ios::in);
+
+    if (!infile.is_open()) {
+        cerr << "Error: cannot open input file: " << filename << '\n';
+        return 3;
+    }
+
+    infile.close();
+
+
+    
+    ifstream infile2;
+    infile2.open(quals_filename.c_str(), ios::in);
+    string line = "";
+    string line2 = "";
+    
+    infile.open(filename.c_str(), ios::in);
+    
+
+    while (!infile.eof() && !infile2.eof()) {
+        getline(infile,line);
+        
+        trim2(line);
+        
+        if(line.length() < 1){
+            continue;            
+        }
+        
+        if(line[0] == '@'){
+            cout << line << '\n';
+            continue;
+        }
+
+        vector<string> line_list = split(line);
+        
+        if(line_list.size() < 10){
+            cerr << "Bad line: " << line << '\n';
+            cout << line << '\n';
+            continue;
+        }
+        
+        // read the quals
+        getline(infile2,line2);
+        trim2(line2);
+        
+        if(line2.length() < 1){
+            cerr << "Bad quals file..." << '\n';
+            cerr << line << '\n';
+            cerr << line2 << '\n';
+            return 1;
+        }
+        
+        vector<string> line_list2 = split(line2);
+        
+        string new_quals = "";
+        for(vector<string>::iterator ll = line_list2.begin();
+                ll != line_list2.end();ll++){
+            
+            int val = (int)round(strTo<double>(*ll));
+            
+            val += offset;
+            
+            if(val <= 0 || val >= 255){
+                cerr << "ERROR: bad quals: " << line2 << '\n';
+                return 2;
+            }
+            
+            new_quals.push_back((char)val);
+            
+        }
+        
+        // get flag
+        int flag = strTo<int>(line_list[1]);
+        
+       
+        
+        // invert if necessary
+        bool invert = false;
+        
+        if(!((flag & 4) && (flag & 8))){
+            // at least on read is mapped
+            if(flag & 64){
+                // first in pair
+                invert = flag & 16;
+            }else if(flag & 128){
+                // second in pair
+                invert = (!(flag & 16));
+            }
+            
+        }
+        
+        if(invert){
+            reverse(new_quals.begin(),new_quals.end());
+        }
+        
+        // do the diff
+        int llen = (int)line_list[10].size();
+        int num_wind = llen/wsize;
+        
+        bool last_wind = false;
+        if(num_wind * wsize != llen){
+            last_wind = true;
+        }
+        
+        for(int i = 0;i<num_wind;i++){
+            
+            int offset = i*wsize;
+            int noffset = i*(wsize-1);
+            for(int j = 1;j<wsize;j++){
+                line_list[10][offset+j] = line_list[10][offset+j-1]+new_quals[noffset+j-1];
+            }
+        }
+        
+        if(last_wind){
+            int old_wsize = wsize;
+            wsize = llen - num_wind * old_wsize;
+            
+            int offset = num_wind*old_wsize;
+            int noffset = num_wind*(old_wsize-1);
+            for(int j = 1;j<wsize;j++){
+                line_list[10][offset+j] = line_list[10][offset+j-1]+new_quals[noffset+j-1];
+            }
+        }
+        
+        cout << line_list[0];
+        
+        for (int i = 1;i < (int)line_list.size(); i++){
+            cout << '\t' << line_list[i] ;
+        }
+        
+        cout << "\n";
+                
+
+    }
+    
+    infile.close();
+    infile2.close();
+
+
+    return 0;
+}
+
 
 
 int quant_sam_quals(vector<string> params) {
