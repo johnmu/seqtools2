@@ -1462,7 +1462,7 @@ int replace_sam_quals_diff(vector<string> params) {
             + "replace quals in SAM file with new ones!";
 
 
-    if (params.size() != 3) {
+    if (params.size() != 4) {
         cerr << usage_text << endl;
         return 3;
     }
