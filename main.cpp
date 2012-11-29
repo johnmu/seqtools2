@@ -106,6 +106,9 @@ int main(int argc, char * const argv[]) {
     } else if (mode == "replace_sam_quals") {
 
         error_num = replace_sam_quals(params);
+    } else if (mode == "replace_sam_quals_diff") {
+
+        error_num = replace_sam_quals_diff(params);
     } else if (mode == "quant_sam_quals") {
 
         error_num = quant_sam_quals(params);

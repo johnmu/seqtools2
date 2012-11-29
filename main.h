@@ -132,6 +132,7 @@ int fastq_stats(vector<string> params);
 int fastq_quals(vector<string> params);
 int sam_quals(vector<string> params);
 int replace_sam_quals(vector<string> params);
+int replace_sam_quals_diff(vector<string> params);
 int quant_sam_quals(vector<string> params);
 int depth_stats(vector<string> params);
 int sam_stats(vector<string> params);
