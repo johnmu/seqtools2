@@ -1584,7 +1584,18 @@ int replace_sam_quals_diff(vector<string> params) {
             int offset = i*wsize;
             int noffset = i*(wsize-1);
             for(int j = 1;j<wsize;j++){
-                line_list[10][offset+j] = line_list[10][offset+j-1]+new_quals[noffset+j-1];
+                int new_val = line_list[10][offset+j-1]+new_quals[noffset+j-1];
+                
+                if(new_val-qual_offset <0){
+                    new_val = qual_offset;
+                }
+                
+                if(new_val-qual_offset >40){
+                    new_val = qual_offset+40;
+                }
+
+                
+                line_list[10][offset+j] = new_val;
             }
         }
         
@@ -1605,7 +1616,7 @@ int replace_sam_quals_diff(vector<string> params) {
                 if(new_val-qual_offset >40){
                     new_val = qual_offset+40;
                 }
-                
+
                 line_list[10][offset+j] = new_val;
             }
         }
