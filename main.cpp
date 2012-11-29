@@ -1457,20 +1457,18 @@ int replace_sam_quals(vector<string> params) {
 
 // temp thing for annoying thing
 int replace_sam_quals_diff(vector<string> params) {
-    string usage_text = "Usage: " + PROG_NAME + " replace_sam_quals_diff <SAM_file> <offset> <window_size> <quals_file>\n"
-            + "Offset typically 33 (illumina 1.8+,sanger) or 64 (illumina 1.3+)\n"
-            + "replace quals in SAM file with new ones!";
+    string usage_text = "Usage: " + PROG_NAME + " replace_sam_quals_diff <SAM_file> <window_size> <quals_file>\n"
+            + "replace quals in SAM file with new ones, but diff...!";
 
 
-    if (params.size() != 4) {
+    if (params.size() != 3) {
         cerr << usage_text << endl;
         return 3;
     }
 
     string filename = params[0];
-    int offset = strTo<int>(params[1]);
-    int wsize  = strTo<int>(params[2]);
-    string quals_filename = params[3];
+    int wsize  = strTo<int>(params[1]);
+    string quals_filename = params[2];
     
     ifstream infile;
 
@@ -1544,15 +1542,7 @@ int replace_sam_quals_diff(vector<string> params) {
             
             int val = (int)round(strTo<double>(*ll));
             
-            val += offset;
-            
-            if(val <= 0 || val >= 255){
-                cerr << "ERROR: bad quals: " << line2 << '\n';
-                return 2;
-            }
-            
             new_quals.push_back((char)val);
-            
         }
         
         // get flag
