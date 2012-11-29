@@ -1457,18 +1457,19 @@ int replace_sam_quals(vector<string> params) {
 
 // temp thing for annoying thing
 int replace_sam_quals_diff(vector<string> params) {
-    string usage_text = "Usage: " + PROG_NAME + " replace_sam_quals_diff <SAM_file> <window_size> <quals_file>\n"
+    string usage_text = "Usage: " + PROG_NAME + " replace_sam_quals_diff <SAM_file> <window_size> <offset> <quals_file>\n"
             + "replace quals in SAM file with new ones, but diff...!";
 
 
-    if (params.size() != 3) {
+    if (params.size() != 4) {
         cerr << usage_text << endl;
         return 3;
     }
 
     string filename = params[0];
     int wsize  = strTo<int>(params[1]);
-    string quals_filename = params[2];
+    int qual_offset  = strTo<int>(params[2]);
+    string quals_filename = params[3];
     
     ifstream infile;
 
@@ -1594,7 +1595,18 @@ int replace_sam_quals_diff(vector<string> params) {
             int offset = num_wind*old_wsize;
             int noffset = num_wind*(old_wsize-1);
             for(int j = 1;j<wsize;j++){
-                line_list[10][offset+j] = line_list[10][offset+j-1]+new_quals[noffset+j-1];
+                
+                int new_val = line_list[10][offset+j-1]+new_quals[noffset+j-1];
+                
+                if(new_val-qual_offset <0){
+                    new_val = qual_offset;
+                }
+                
+                if(new_val-qual_offset >40){
+                    new_val = qual_offset+40;
+                }
+                
+                line_list[10][offset+j] = new_val;
             }
         }
         
