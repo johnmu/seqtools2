@@ -899,7 +899,67 @@ inline int bwa_trim_len(string &qual_str, int qual, int min_len) {
 
 /////
 
+// returns locations for first good base
+inline int trim_phase_seq_primer(string & read){
+    const string bad_str = "GTTGGGTGTGTTTGG";
+    const int bad_len = 15;
+    int phase_loc = -1;
 
+    int N = read.length();
+
+    if(N < 33) return -1;
+
+    for(int i = 0;i < 4; i++){
+        bool found = true;
+        int mm = 0;
+        for(int j = 0;j<bad_len;j++){
+            if(bad_str[j] != read[i+j]){
+                mm++;
+                if(mm>2){
+                    found = false;
+                    break;
+                }
+            }
+        }
+
+        if(found){
+            phase_loc = i + bad_len + 11 + 5; // add 5 to be safe
+
+            break;
+        }
+    }
+
+
+    // do again incase it is a double primer -_-
+
+    if(phase_loc != -1 && N - phase_loc > 33) {
+
+        for (int i = phase_loc; i < phase_loc+4; i++) {
+            bool found = true;
+            int mm = 0;
+            for (int j = 0; j < bad_len; j++) {
+                if (bad_str[j] != read[i + j]) {
+                    mm++;
+                    if (mm > 2){
+                        found = false;
+                        break;
+                    }
+                }
+            }
+
+            if (found) {
+                phase_loc = phase_loc + i + bad_len + 11 + 5; // add 5 to be safe
+
+                break;
+            }
+        }
+    }
+
+
+    if(phase_loc < N-1) return phase_loc;
+    else return N-1;
+
+}
 
 
 void output_percentage(ostream &out, uint64_t total, uint64_t num);

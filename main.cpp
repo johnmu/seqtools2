@@ -82,6 +82,9 @@ int main(int argc, char * const argv[]) {
     } else if (mode == "fastq_trim") {
 
         error_num = fastq_trim(params);
+    } else if (mode == "fastq_pico_trim") {
+
+        error_num = fastq_pico_trim(params);
     } else if (mode == "merge_sam") {
 
         error_num = merge_sam(params);
@@ -701,6 +704,75 @@ int time_test(vector<string> params) {
 
 
     delete [] array;
+
+    return 0;
+}
+
+
+int fastq_pico_trim(vector<string> params) {
+    string usage_text = "Usage: " + PROG_NAME + " fastq_pico_trim <FASTA/Q_file>\n"
+            + "    FASTA/Q_file     -- \n"
+            + "Trim a FASTA/Q file to remove the picoplex adaptor";
+
+    if (params.size() != 1) {
+        cerr << usage_text << endl;
+        return 3;
+    }
+
+    string filename = params[0];
+
+    ifstream infile;
+
+    infile.open(filename.c_str(), ios::in);
+
+    if (!infile.is_open()) {
+        cerr << "Error: cannot open input file: " << filename << '\n';
+        return 3;
+    }
+
+    infile.close();
+
+
+    fast in(filename, false);
+
+    while (!in.eof()) {
+        fast_t line = in.get_next_record();
+
+        if ((int)line.seq.length() == 0) {
+            continue;
+        }
+
+        
+
+        int start_idx = trim_phase_seq_primer(line.seq);
+
+        if(line.qual_exist) {
+
+            if (start_idx < (int) line.seq.length() - 1) {
+                line.seq = line.seq.substr(start_idx);
+                line.qual = line.qual.substr(start_idx);
+            } else {
+                line.seq = "N";
+                line.qual = "#";
+            }
+
+            cout << '@' << line.name << '\n';
+            cout << line.seq << '\n';
+            cout << "+\n";
+            cout << line.qual << '\n';
+        } else {
+             if (start_idx < (int) line.seq.length() - 1) {
+                line.seq = line.seq.substr(start_idx);
+            } else {
+                line.seq = "N";
+            }
+
+            cout << '>' << line.name << '\n';
+            cout << line.seq << '\n';;
+        }
+
+    }
+
 
     return 0;
 }
@@ -2899,6 +2971,7 @@ void print_usage_and_exit() {
     cerr << "  subseq         -- Extract a region from a single chromosome FASTA file" << "\n";
     cerr << "  qual_convert      -- Convert the quality of FASTQ files" << "\n";
     cerr << "  fastq_trim        -- Trim BWA style [not implemented yet]" << "\n";
+    cerr << "  fastq_pico_trim   -- Trim the picoplex adaptor" << "\n";
     cerr << "  fastq_filter      -- Only output reads with a percentage of bases above a certain quality" << "\n";
     cerr << "  fq_len_filter     -- Reject reads less than some length" << "\n";
     cerr << "  fastq_stats       -- Get some statistics from a FASTQ file" << "\n";

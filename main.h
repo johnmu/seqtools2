@@ -126,6 +126,7 @@ void print_usage_and_exit();
 int merge_sam(vector<string> params);
 int sample_reads(vector<string> params);
 int fastq_filter(vector<string> params);
+int fastq_pico_trim(vector<string> params);
 int fq_len_filter(vector<string> params);
 int qual_convert(vector<string> params);
 int fastq_stats(vector<string> params);
