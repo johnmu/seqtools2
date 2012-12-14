@@ -746,14 +746,17 @@ int fastq_pico_trim(vector<string> params) {
 
         int start_idx = trim_phase_seq_primer(line.seq);
 
+        
         if(line.qual_exist) {
 
-            if (start_idx < (int) line.seq.length() - 1) {
-                line.seq = line.seq.substr(start_idx);
-                line.qual = line.qual.substr(start_idx);
-            } else {
-                line.seq = "N";
-                line.qual = "#";
+            if (start_idx >= 0) {
+                if (start_idx < (int) line.seq.length() - 1) {
+                    line.seq = line.seq.substr(start_idx);
+                    line.qual = line.qual.substr(start_idx);
+                } else {
+                    line.seq = "N";
+                    line.qual = "#";
+                }
             }
 
             cout << '@' << line.name << '\n';
@@ -761,10 +764,13 @@ int fastq_pico_trim(vector<string> params) {
             cout << "+\n";
             cout << line.qual << '\n';
         } else {
-             if (start_idx < (int) line.seq.length() - 1) {
-                line.seq = line.seq.substr(start_idx);
-            } else {
-                line.seq = "N";
+            
+            if(start_idx >= 0) {
+                if (start_idx < (int) line.seq.length() - 1) {
+                    line.seq = line.seq.substr(start_idx);
+                } else {
+                    line.seq = "N";
+                }
             }
 
             cout << '>' << line.name << '\n';

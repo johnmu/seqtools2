@@ -900,12 +900,12 @@ inline int bwa_trim_len(string &qual_str, int qual, int min_len) {
 /////
 
 // returns locations for first good base
-inline int trim_phase_seq_primer(string & read){
+inline int trim_phase_seq_primer(const string & read){
     const string bad_str = "GTTGGGTGTGTTTGG";
     const int bad_len = 15;
     int phase_loc = -1;
 
-    int N = read.length();
+    int N = (int)read.length();
 
     if(N < 33) return -1;
 
