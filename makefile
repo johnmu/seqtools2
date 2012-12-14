@@ -1,5 +1,6 @@
 CC = g++
 CFLAGS = -O3 -m64 -Wall -pthread
+#CFLAGS = -g -m64 -Wall -pthread
 
 install: seqtools2
 
