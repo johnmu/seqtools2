@@ -1390,19 +1390,32 @@ int sam_quals(vector<string> params) {
 
 
 int replace_sam_quals(vector<string> params) {
-    string usage_text = "Usage: " + PROG_NAME + " replace_sam_quals <SAM_file> <offset> <quals_file>\n"
+    string usage_text = "Usage: " + PROG_NAME + " replace_sam_quals [-e] <SAM_file> <offset> <quals_file>\n"
             + "Offset typically 33 (illumina 1.8+,sanger) or 64 (illumina 1.3+)\n"
             + "replace quals in SAM file with new ones!";
 
 
-    if (params.size() != 3) {
+    if (params.size() < 3 || params.size() > 4) {
         cerr << usage_text << endl;
         return 3;
     }
+    
+    bool take_log = false;
+    int param_offset = 0;
+    
+    if(params.size() == 5){
+        if(params[0] == "-e"){
+            take_log = true;
+            param_offset = 1;
+        }else{
+            cerr << usage_text << endl;
+            return 3;
+        }
+    }
 
-    string filename = params[0];
-    int offset = strTo<int>(params[1]);
-    string quals_filename = params[2];
+    string filename = params[0 + param_offset];
+    int offset = strTo<int>(params[1 + param_offset]);
+    string quals_filename = params[2 + param_offset];
     
     ifstream infile;
 
@@ -1474,8 +1487,12 @@ int replace_sam_quals(vector<string> params) {
         for(vector<string>::iterator ll = line_list2.begin();
                 ll != line_list2.end();ll++){
             
-            int val = (int)round(strTo<double>(*ll));
-            
+            int val = 0;
+            if(take_log){
+                val = (int)round(-10 * log(strTo<double>(*ll)));
+            }else{
+                val = (int)round(strTo<double>(*ll));
+            }
             val += offset;
             
             if(val <= 0 || val >= 255){
