@@ -1535,19 +1535,33 @@ int replace_sam_quals(vector<string> params) {
 
 // temp thing for annoying thing
 int replace_sam_quals_diff(vector<string> params) {
-    string usage_text = "Usage: " + PROG_NAME + " replace_sam_quals_diff <SAM_file> <window_size> <offset> <quals_file>\n"
+    string usage_text = "Usage: " + PROG_NAME + " replace_sam_quals_diff [-e] <SAM_file> <window_size> <offset> <quals_file>\n"
+            + "    -e    -- de-Exponentiate first\n"
             + "replace quals in SAM file with new ones, but diff...!";
 
 
-    if (params.size() != 4) {
+    if (params.size() < 4 || params.size() > 5) {
         cerr << usage_text << endl;
         return 3;
     }
+    
+    bool take_log = false;
+    int offset = 0;
+    
+    if(params.size() == 5){
+        if(params[0] == "-e"){
+            take_log = true;
+            offset = 1;
+        }else{
+            cerr << usage_text << endl;
+            return 3;
+        }
+    }
 
-    string filename = params[0];
-    int wsize  = strTo<int>(params[1]);
-    int qual_offset  = strTo<int>(params[2]);
-    string quals_filename = params[3];
+    string filename = params[0 + offset];
+    int wsize  = strTo<int>(params[1 + offset]);
+    int qual_offset  = strTo<int>(params[2 + offset]);
+    string quals_filename = params[3 + offset];
     
     ifstream infile;
 
@@ -1618,9 +1632,13 @@ int replace_sam_quals_diff(vector<string> params) {
         string new_quals = "";
         for(vector<string>::iterator ll = line_list2.begin();
                 ll != line_list2.end();ll++){
-            
-            int val = (int)round(strTo<double>(*ll));
-            
+
+            int val = 0;
+            if(take_log){
+                val = (int)round(-10.0*log(strTo<double>(*ll)));
+            }else{
+                val = (int)round(strTo<double>(*ll));
+            }
             new_quals.push_back((char)val);
         }
         
