@@ -1403,7 +1403,7 @@ int replace_sam_quals(vector<string> params) {
     bool take_log = false;
     int param_offset = 0;
     
-    if(params.size() == 5){
+    if(params.size() == 4){
         if(params[0] == "-e"){
             take_log = true;
             param_offset = 1;
