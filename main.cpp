@@ -1493,7 +1493,6 @@ int replace_sam_quals(vector<string> params) {
             }else{
                 val = (int)round(strTo<double>(*ll));
             }
-            val += offset;
             
             if(val <= 0 || val >= 255){
                 cerr << "ERROR: bad quals("<< val <<"|" << *ll <<"): " << line2 << '\n';
@@ -1504,6 +1503,12 @@ int replace_sam_quals(vector<string> params) {
             }else if(val > 40){
                 val = 40;
             }
+            
+            val += offset;
+            
+            
+            
+            
             
             new_quals.push_back((char)val);
             
