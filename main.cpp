@@ -1496,7 +1496,7 @@ int replace_sam_quals(vector<string> params) {
             val += offset;
             
             if(val <= 0 || val >= 255){
-                cerr << "ERROR: bad quals: " << line2 << '\n';
+                cerr << "ERROR: bad quals("<< val <<"|" << *ll <<"): " << line2 << '\n';
                 return 2;
             }
             
