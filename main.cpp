@@ -1497,7 +1497,12 @@ int replace_sam_quals(vector<string> params) {
             
             if(val <= 0 || val >= 255){
                 cerr << "ERROR: bad quals("<< val <<"|" << *ll <<"): " << line2 << '\n';
-                return 2;
+            }
+            
+            if(val < 2){
+                val = 2;
+            }else if(val > 40){
+                val = 40;
             }
             
             new_quals.push_back((char)val);
