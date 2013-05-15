@@ -142,8 +142,7 @@ int barcode_split(vector<string> params);
 int pair_split(vector<string> params);
 int raw2fasta(vector<string> params);
 
-int time_test(vector<string> params);
-
+int select_haps(vector<string> params);
 
 int subseq(vector<string> params);
 

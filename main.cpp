@@ -130,7 +130,10 @@ int main(int argc, char * const argv[]) {
     } else if (mode == "time_test") {
 
         error_num = time_test(params);
-    }else {
+    } else if (mode == "select_haps") {
+
+        error_num = select_haps(params);
+    } else {
         print_usage_and_exit();
 
     }
@@ -672,41 +675,6 @@ int barcode_split(vector<string> params) {
     return 0;
 }
 
-
-
-int time_test(vector<string> params) {
-    mu_timer tt;
-    MT_random gen;
-
-    const int num = 100000;
-
-    double* array = new double[num];
-
-    for (int i = 0;i<num;i++){
-        array[i] = gen.genrand_norm();
-    }
-
-    int repeat = 1000;
-    double time_count = 0.0l;
-    uint64_t count = 0;
-
-    for (int x = 0; x < repeat; x++) {
-        tt.reset();
-        for (int i = 0; i < num; i++) {
-            if (array[i] > 0) count++;
-        }
-        time_count += tt.elapsed_time();
-    }
-
-
-    cout << count/(double)repeat << '\n';
-    cout << time_count/repeat << '\n';
-
-
-    delete [] array;
-
-    return 0;
-}
 
 
 int fastq_pico_trim(vector<string> params) {
@@ -1391,6 +1359,7 @@ int sam_quals(vector<string> params) {
 
 int replace_sam_quals(vector<string> params) {
     string usage_text = "Usage: " + PROG_NAME + " replace_sam_quals [-e] <SAM_file> <offset> <quals_file>\n"
+            + "    -e  --  Take log\n"
             + "Offset typically 33 (illumina 1.8+,sanger) or 64 (illumina 1.3+)\n"
             + "replace quals in SAM file with new ones!";
 
@@ -3007,6 +2976,58 @@ int subseq(vector<string> params) {
     cout << temp << endl;
 
 
+    return 0;
+
+}
+
+
+int select_haps(vector<string> params) {
+    string usage_text = "Usage: " + PROG_NAME + " select_haps <hap_file> <sample_file> <test_size> [seed]\n"
+            + "    hap_file           -- File with the haplotypes\n"
+            + "    sample_file        -- the sample file associated with the hap file\n"
+            + "    test_size          -- the size of test set\n"
+            + "    seed               -- Optional seed for random number generator\n"
+            + "Randomly select some haps and generate test and train set";
+
+
+
+    if (params.size() < 3 || params.size() > 4) {
+        cerr << usage_text << endl;
+        return 3;
+    }
+
+    string hap_filename = params[0];
+    string sample_filename = params[1];
+    int number_test = strTo<int>(params[2]);
+    
+    if(number_test <= 0){
+        cerr << "Must have at least one test\n";
+        return 2;
+    }
+    
+    uint64_t seed = 0;
+    if(params.size() == 4){
+        seed = strTo<int>(params[3]);
+    }
+    
+    MT_random rand_gen(seed);
+    
+    ifstream hap_file(hap_filename.c_str(),ios::in);
+    if(!hap_file.is_open()){
+        cerr << "Cannot open: " << hap_filename <<'\n';
+        return 1;
+    }
+    hap_file.close();
+    
+    ifstream sample_file(sample_filename.c_str(),ios::in);
+    if(!sample_file.is_open()){
+        cerr << "Cannot open: " << sample_filename << '\n';
+        return 1;
+    }
+    sample_file.close();
+    
+    
+    
     return 0;
 
 }
