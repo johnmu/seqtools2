@@ -127,9 +127,6 @@ int main(int argc, char * const argv[]) {
     } else if (mode == "pair_split") {
 
         error_num = pair_split(params);
-    } else if (mode == "time_test") {
-
-        error_num = time_test(params);
     } else if (mode == "select_haps") {
 
         error_num = select_haps(params);
@@ -2984,14 +2981,14 @@ int subseq(vector<string> params) {
 int select_haps(vector<string> params) {
     string usage_text = "Usage: " + PROG_NAME + " select_haps <hap_file> <sample_file> <test_size> [seed]\n"
             + "    hap_file           -- File with the haplotypes\n"
-            + "    sample_file        -- the sample file associated with the hap file\n"
-            + "    test_size          -- the size of test set\n"
+            + "    sample_file        -- The sample file associated with the hap file\n"
+            + "    test_size          -- The size of test set (each test sample needs 2 individuals)\n"
             + "    seed               -- Optional seed for random number generator\n"
-            + "Randomly select some haps and generate test and train set";
+            + "Randomly select some haplotypes and generate test and train set";
 
 
 
-    if (params.size() < 3 || params.size() > 4) {
+    if (params.size() < 4 || params.size() > 5) {
         cerr << usage_text << endl;
         return 3;
     }
@@ -3010,23 +3007,250 @@ int select_haps(vector<string> params) {
         seed = strTo<int>(params[3]);
     }
     
-    MT_random rand_gen(seed);
-    
-    ifstream hap_file(hap_filename.c_str(),ios::in);
-    if(!hap_file.is_open()){
-        cerr << "Cannot open: " << hap_filename <<'\n';
-        return 1;
+    MT_random randgen(seed);
+
+    { // Check each of the files can be opened
+        ifstream hap_file(hap_filename.c_str(), ios::in);
+        if (!hap_file.is_open()) {
+            cerr << "Cannot open: " << hap_filename << '\n';
+            return 1;
+        }
+        hap_file.close();
+
+
+        ifstream sample_file(sample_filename.c_str(), ios::in);
+        if (!sample_file.is_open()) {
+            cerr << "Cannot open: " << sample_filename << '\n';
+            return 1;
+        }
+        sample_file.close();
     }
-    hap_file.close();
-    
-    ifstream sample_file(sample_filename.c_str(),ios::in);
-    if(!sample_file.is_open()){
-        cerr << "Cannot open: " << sample_filename << '\n';
-        return 1;
+
+
+    // read the haplotypes into a matrix
+    // also count the number of individuals
+    vector < vector<char> > all_haps;
+    {
+        ifstream hap_file(hap_filename.c_str(), ios::in);
+
+        string temp;
+        
+        while(getline(hap_file,temp)){
+            trim2(temp);
+            
+            if(temp.length() == 0){
+                continue;
+            }
+            all_haps.push_back(vector<char>());
+            vector < vector<char> >::iterator it = all_haps.end();
+            it--;
+            for (int i = 0;i<(int)temp.length();i=i+4){
+                switch(temp[i]){
+                    case '0':
+                        it->push_back(temp[i]);
+                        break;
+                    case '1':
+                        it->push_back(temp[i]);
+                        break;
+                    case '-':
+                        it->push_back(temp[i]);
+                        break;
+                    default:
+                        cerr << "Error bad hap: " << temp << '\n';
+                }
+            }
+        }
+        hap_file.close();
     }
-    sample_file.close();
+    
+    // check if we have enough individuals
+    int num_ind = (int)all_haps.size();
+    
+    if(num_ind < number_test*3){
+        cerr << "Not enough individuals for testing: " << num_ind << '\n';
+        return 2;
+    }
+
+    // read in the sample file
+    
+    vector<string> all_samples;
+    {
+        ifstream sample_file(sample_filename.c_str(), ios::in);
+        string temp;
+        while(getline(sample_file,temp)){
+            trim2(temp);
+            
+            if(temp.length() == 0){
+                continue;
+            }
+            all_samples.push_back(temp);
+        }
+        
+        sample_file.close();
+    }
     
     
+    // sample without replacement the test set indexes
+    
+    int num_test_ind = number_test*2;
+    vector<int> indexes;
+
+    {
+        for (int k = 0;k<num_ind;k++) {
+
+            if (k <= num_test_ind) {
+                indexes.push_back(k);
+            } else {
+                if (randgen.genrand_bern(num_test_ind / (double) k)) {
+                    // we replace a random current sample
+                    int idx = randgen.genrand_int_range(0, num_test_ind - 1);
+                    indexes[idx] = k;
+                }
+            }
+        }
+    }
+    sort(indexes.begin(),indexes.end());
+    
+    
+    // output the training set files
+    {
+        string temp = "train_"+hap_filename;
+        
+        ofstream hap_file(temp.c_str(), ios::out);
+        
+        for(int k = 0; k < num_ind; k++){
+            
+            if(binary_search(indexes.begin(),indexes.end(),k)){
+                continue;
+            }
+            
+            char h = all_haps[k][0];
+            hap_file << h << ' ' << h;
+            
+            for(int i = 1;i<(int)all_haps[k].size();i++){
+                h = all_haps[k][i];
+                hap_file << ' ' << h << ' ' << h;
+            }
+            
+            hap_file << '\n';
+        }
+        
+        hap_file.close();
+        
+        temp = "train_"+sample_filename;
+        
+        ofstream sample_file(temp.c_str(), ios::out);
+        for(int k = 0; k < num_ind; k++){
+            
+            if(binary_search(indexes.begin(),indexes.end(),k)){
+                continue;
+            }
+            
+            sample_file << all_samples[k] << '\n';
+        }
+        sample_file.close();
+    }
+    // output the true test samples
+    vector<int> perm_indexes = indexes;
+    random_shuffle(perm_indexes.begin(),perm_indexes.end());
+    
+    {
+        string temp = "true_"+hap_filename;
+        
+        ofstream hap_file(temp.c_str(), ios::out);
+        
+        for(int k = 0; k < num_ind; k++){
+            
+            if(!binary_search(indexes.begin(),indexes.end(),k)){
+                continue;
+            }
+            
+            char h = all_haps[k][0];
+            hap_file << h << ' ' << h;
+            
+            for(int i = 1;i<(int)all_haps[k].size();i++){
+                h = all_haps[k][i];
+                hap_file << ' ' << h << ' ' << h;
+            }
+            
+            hap_file << '\n';
+        }
+        
+        hap_file.close();
+        
+        temp = "true_"+sample_filename;
+        
+        ofstream sample_file(temp.c_str(), ios::out);
+        for(int k = 0; k < num_ind; k++){
+            
+            if(!binary_search(indexes.begin(),indexes.end(),k)){
+                continue;
+            }
+            
+            sample_file << all_samples[k] << '\n';
+        }
+        sample_file.close();
+    }
+    
+    // output the test samples for input into the program
+    
+    {
+        int test_idx = 0;
+        int test_pair[2] = {0,0};
+        
+        string temp = "test_"+hap_filename;
+        
+        ofstream hap_file(temp.c_str(), ios::out);
+        
+        for(int k = 0; k < num_ind; k++){
+            
+            if(!binary_search(indexes.begin(),indexes.end(),k)){
+                continue;
+            }
+            
+            int p = test_idx % 2;
+
+            test_pair[p] = k;
+
+            if (p == 1) {
+                char h1 = all_haps[test_pair[0]][0];
+                char h2 = all_haps[test_pair[1]][0];
+                hap_file << h1 << ' ' << h2;
+
+                for (int i = 1; i < (int)all_haps[k].size(); i++) {
+                    h1 = all_haps[test_pair[0]][i];
+                    h2 = all_haps[test_pair[1]][i];
+                    hap_file << ' ' << h1 << ' ' << h2;
+                }
+
+                hap_file << '\n';
+            }
+            
+            test_idx++;
+        }
+        
+        hap_file.close();
+        
+        test_idx = 0;
+        
+        temp = "test_"+sample_filename; // this sample file is fake
+        
+        ofstream sample_file(temp.c_str(), ios::out);
+        for(int k = 0; k < num_ind; k++){
+            
+            if(!binary_search(indexes.begin(),indexes.end(),k)){
+                continue;
+            }
+            
+            int p = test_idx % 2;
+            
+            if (p == 1) {
+                sample_file << all_samples[k] << '\n';
+            }
+            test_idx++;
+        }
+        sample_file.close();
+    }
     
     return 0;
 
@@ -3036,10 +3260,7 @@ void print_usage_and_exit() {
     cerr << "Usage: " + PROG_NAME + " <option>" << "\n";
     cerr << "Options:" << "\n";
     cerr << "-== Useful Tools ==-" << '\n';
-    //cerr << "  affine_nw      -- Needleman-Wunch of read with reference, affine gap penalty" << "\n";
-    //cerr << "  all_sw         -- Smith-Waterman and Needleman-Wunch of read with reference" << "\n";
     cerr << "  raw2fasta      -- Convert RAW reads to FASTA format" << "\n";
-    //cerr << "  check_idx      -- Check how much of a read exists in the index" << "\n";
     cerr << "  subseq         -- Extract a region from a single chromosome FASTA file" << "\n";
     cerr << "  qual_convert      -- Convert the quality of FASTQ files" << "\n";
     cerr << "  fastq_trim        -- Trim BWA style [not implemented yet]" << "\n";

@@ -49,7 +49,7 @@
 using namespace std;
 
 const string PROG_NAME = "seqtools2";
-const string BUILD = "0.1-r17";
+const string BUILD = "0.1-r18";
 
 
 class twoint {
