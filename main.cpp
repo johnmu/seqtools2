@@ -2988,7 +2988,7 @@ int select_haps(vector<string> params) {
 
 
 
-    if (params.size() < 4 || params.size() > 5) {
+    if (params.size() < 3 || params.size() > 4) {
         cerr << usage_text << endl;
         return 3;
     }
