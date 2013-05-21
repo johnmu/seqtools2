@@ -143,6 +143,7 @@ int pair_split(vector<string> params);
 int raw2fasta(vector<string> params);
 
 int select_haps(vector<string> params);
+int vcf_to_hap(vector<string> params);
 
 int subseq(vector<string> params);
 

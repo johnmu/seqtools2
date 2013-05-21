@@ -130,6 +130,9 @@ int main(int argc, char * const argv[]) {
     } else if (mode == "select_haps") {
 
         error_num = select_haps(params);
+    } else if (mode == "vcf_to_hap") {
+
+        error_num = vcf_to_hap(params);
     } else {
         print_usage_and_exit();
 
@@ -3255,6 +3258,326 @@ int select_haps(vector<string> params) {
     return 0;
 
 }
+
+
+
+int vcf_to_hap(vector<string> params) {
+    string usage_text = "Usage: " + PROG_NAME + " vcf_to_hap <vcf_file>\n"
+            + "    vcf_file -- Input VCF file\n"
+            + "Convert a VCF file to haps, sample, legend";
+
+    string vcf_filename;
+
+
+    if (params.size() != 1) {
+        cerr << usage_text << endl;
+        return 3;
+    }
+
+    vcf_filename = params[0];
+    
+    {
+        ifstream vcf_file(vcf_filename.c_str(),ios::in);
+        if(!vcf_file.is_open()){
+            cerr << "Could not open VCF file\n";
+            return 1;
+        }
+        vcf_file.close();
+    }
+    
+    vector<string> ind_list;
+    int num_snp = 0;
+    
+    {
+        string temp = "";
+        ifstream vcf_file(vcf_filename.c_str(),ios::in);
+        
+        while(getline(vcf_file,temp)){
+            trim2(temp);
+            if(temp.length()<2){
+                continue;
+            }
+            if(temp[0]=='#' && temp[1] == '#'){
+                continue;
+            }
+            if(temp[0] == '#'){
+                // we read in the individuals now
+                vector<string> ll = split(temp);
+                for(int i=9;i< (int)ll.size();i++){
+                    ind_list.push_back(ll[i]);
+                }
+                
+                continue;
+            }
+            
+            num_snp++;
+            
+            if(num_snp % 10000 == 0){
+                cerr << "Reading SNP: " << num_snp << '\n';
+            }
+        }
+        
+        vcf_file.close();
+    }
+    
+    int num_ind = (int)ind_list.size();
+    
+    cerr << "Number of SNPs: " << num_snp << '\n';
+    cerr << "Number of individuals: " << num_ind << '\n';
+    cerr << "-------------\n";
+    
+    vector<vector<vector<int> > > snp_list;
+    vector<vector<string> > lib_list;
+
+
+    {  // initialise snp_list
+        vector<int> contents;
+        contents.push_back(-1);
+        contents.push_back(-1);
+        for (int i = 0; i < num_snp; i++) {
+            snp_list.push_back(vector<vector<int> >());
+            vector<vector<vector<int> > >::iterator it = snp_list.end();
+            it--;
+            for (int j = 0; j < num_ind; j++) {
+                it->push_back(contents);
+            }
+        }
+    }
+    
+    { // read in the SNPs
+        string temp = "";
+        ifstream vcf_file(vcf_filename.c_str(),ios::in);
+        
+        int snp_idx = 0;
+        
+        while(getline(vcf_file,temp)){
+            trim2(temp);
+            if(temp.length()<2){
+                continue;
+            }
+            if(temp[0]=='#'){
+                continue;
+            }
+            
+            vector<string> ll = split(temp);
+            
+            if(ll[4].length()>1){
+                continue; // multi-allellic loci
+            }
+            
+            vector<string> contents;
+            contents.push_back(ll[0]); // chr_name
+            contents.push_back(ll[1]); // chr_loc
+            
+            if(ll[2][0]=='.'){
+                ll[2] = "SNP_"+toStr<int>(snp_idx);
+            }
+            contents.push_back(ll[2]); // snp_id
+            contents.push_back(ll[3]); // allele1
+            contents.push_back(ll[4]); // allele2
+            
+            for(int i = 9;i<(int)ll.size();i++){
+                string snpl = ll[i];
+                if(!(snpl[i] == '.')){
+                    snp_list[snp_idx][i-9][0] = snpl[0]-48;
+                    snp_list[snp_idx][i-9][1] = snpl[2]-48;
+                }
+            }
+            
+            lib_list.push_back(contents);
+            
+            snp_idx++;
+            
+            if(num_snp % 10000 == 0){
+                cerr << "Reading SNP: " << num_snp << " : " << ll[2] << '\n';
+            }
+        }
+        
+        vcf_file.close();
+    }
+    
+    vector<double> het_ratio(num_ind,0.0);
+    vector<double> mis_ratio(num_ind,0.0);
+    
+    {// determine males and females
+        for(int i = 0;i < num_snp; i++) {
+            for (int j = 0; j < num_ind; j++) {
+                if (snp_list[i][j][0] >= 0) {
+                    if (snp_list[i][j][0] != snp_list[i][j][2]) {
+                        het_ratio[j]++;
+                    }
+                } else {
+                    mis_ratio[j]++;
+                }
+            }
+        }
+        
+        for(int j = 0;j<num_ind;j++){
+            if((num_snp - mis_ratio[j]) == 0){
+                het_ratio[j] = 1;
+            }else{
+                het_ratio[j] = het_ratio[j]/(num_snp-mis_ratio[j]);
+            }
+            mis_ratio[j] = mis_ratio[j]/num_snp;
+        }
+        
+        // output the ratio
+        string temp = vcf_filename + "_ind_stats.txt";
+        ofstream stats_file(temp.c_str(),ios::out);
+        for(int j = 0;j<num_ind;j++){
+            stats_file << het_ratio[j] << '\t' << mis_ratio[j] << '\n';
+        }
+        stats_file.close();
+                
+    }
+    
+    vector<char> bad_ind(num_ind,0);
+
+    {
+        for(int j = 0;j<num_ind;j++){
+            if(het_ratio[j]>0.01){
+                bad_ind[j] = 1;
+                cerr << "Female Individual: " << j << '\n';
+            }
+            if(mis_ratio[j] > 0.05){
+                bad_ind[j] = 1;
+                cerr << "Bad Missing Individual: " << j << "\n";
+            }
+        }    
+    }
+    
+    vector<double> snp_het_ratio(num_snp,0.0);
+    vector<double> snp_mis_ratio(num_snp,0.0);
+    int num_good_ind = 0;
+    
+    {
+        for(int i = 0;i < num_snp; i++) {
+            for (int j = 0; j < num_ind; j++) {
+                
+                if(bad_ind[j] > 0){
+                    continue;
+                }
+                
+                if (snp_list[i][j][0] >= 0) {
+                    if (snp_list[i][j][0] != snp_list[i][j][2]) {
+                        snp_het_ratio[i]++;
+                    }
+                } else {
+                    snp_mis_ratio[i]++;
+                }
+            }
+        }
+
+
+        for (int j = 0; j < num_ind; j++) {
+            if (bad_ind[j] == 0) {
+                num_good_ind++;
+            }
+        }
+
+        cerr << "Number of good individuals: " << num_good_ind << "/" << num_ind << '\n';
+
+
+        for (int i = 0; i < num_snp; i++) {
+            if (num_good_ind - snp_mis_ratio[i] > 0) {
+                snp_het_ratio[i] = snp_het_ratio[i]/(num_good_ind - snp_mis_ratio[i]);
+            } else {
+                snp_het_ratio[i] = 1;
+            }
+            snp_mis_ratio[i] = snp_mis_ratio[i] / num_good_ind;
+        }
+        
+        // output the ratio
+        string temp = vcf_filename + "_snp_stats.txt";
+        ofstream stats_file(temp.c_str(),ios::out);
+        for(int i = 0; i < num_snp; i++){
+            stats_file << snp_het_ratio[i] << '\t' << snp_mis_ratio[i] << '\n';
+        }
+        stats_file.close();
+        
+    }
+    
+    vector<char> bad_snp(num_snp,0);
+    int num_bad_snp = 0;
+    {
+        for(int i = 0;i<num_snp;i++){
+            if(snp_het_ratio[i] > 0.05){
+                bad_snp[i] = 1;
+            }
+            if(snp_mis_ratio[i] > 0.05){
+                bad_snp[i] = 1;
+            }
+            
+            if(bad_snp[i] > 0){
+                num_bad_snp++;
+            }
+        }    
+        
+        cerr << "Number of good SNPs: " << (num_snp-num_bad_snp) << "/" << num_snp << '\n';
+    }
+    
+    { // write hap file
+        string temp = vcf_filename + ".hap";
+        ofstream out_file(temp.c_str(),ios::out);
+        for(int i = 0;i<num_snp;i++){
+            if(bad_snp[i] > 0){
+                continue;
+            }
+            
+            for(int j = 0; j < num_ind; j++){
+                if(bad_ind[j] > 0){
+                    continue;
+                }
+                
+                if(j!=0){
+                    out_file << ' ';
+                }
+                if (snp_list[i][j][0] >= 0) {
+                    if (not snp_list[i][j][0] == snp_list[i][j][1]) {
+                        out_file << "- -";
+                    } else {
+                        out_file << snp_list[i][j][0] << ' ' << snp_list[i][j][0];
+                    }
+                } else {
+                    out_file << "- -";
+                }
+            }
+            out_file << '\n';
+        }
+        out_file.close();
+    }
+    
+    { // write SAMPLE file
+        string temp = vcf_filename + ".sample";
+        ofstream out_file(temp.c_str(),ios::out);
+        for(int j = 0; j < num_ind; j++){
+            if(bad_ind[j] > 0){
+                continue;
+            }
+            out_file << ind_list[j] << " CEU EUR 1\n";
+        }
+        out_file.close();
+    }
+
+    { // write LEGNED file
+        string temp = vcf_filename + ".legend";
+        ofstream out_file(temp.c_str(), ios::out);
+        for(int i = 0;i<num_snp;i++){
+            if(bad_snp[i] > 0){
+                continue;
+            }
+            out_file << lib_list[i][2] << ' ' << lib_list[i][1] << ' ' 
+                    << lib_list[i][3] << ' ' << lib_list[i][4] << '\n';
+        }
+        out_file.close();
+    }
+    
+    
+    return 0;
+
+}
+
+
 
 void print_usage_and_exit() {
     cerr << "Usage: " + PROG_NAME + " <option>" << "\n";
