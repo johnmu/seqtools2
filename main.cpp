@@ -3362,6 +3362,7 @@ int vcf_to_hap(vector<string> params) {
             vector<string> ll = split(temp);
             
             if(ll[4].length()>1){
+                cerr << "ll[4]: " << ll[4] << '\n';
                 continue; // multi-allellic loci
             }
             
