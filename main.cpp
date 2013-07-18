@@ -3362,7 +3362,6 @@ int vcf_to_hap(vector<string> params) {
             vector<string> ll = split(temp);
             
             if(ll[4].length()>1){
-                cerr << "ll[4]: " << ll[4] << '\n';
                 continue; // multi-allellic loci
             }
             
@@ -3379,7 +3378,7 @@ int vcf_to_hap(vector<string> params) {
             
             for(int i = 9;i<(int)ll.size();i++){
                 string snpl = ll[i];
-                if(!(snpl[i] == '.')){
+                if(!(snpl[0] == '.')){
                     snp_list[snp_idx][i-9][0] = snpl[0]-48;
                     snp_list[snp_idx][i-9][1] = snpl[2]-48;
                 }
