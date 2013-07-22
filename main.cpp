@@ -3425,7 +3425,7 @@ int vcf_to_hap(vector<string> params) {
         num_snp = snp_idx;
     }
     
-    
+    cerr << "Total SNPs read: " << num_snp << '\n';
     
     vector<double> het_ratio(num_ind,0.0);
     vector<double> mis_ratio(num_ind,0.0);
@@ -3434,7 +3434,7 @@ int vcf_to_hap(vector<string> params) {
         for(int i = 0;i < num_snp; i++) {
             for (int j = 0; j < num_ind; j++) {
                 if (snp_list[i][j][0] >= 0) {
-                    if (snp_list[i][j][0] != snp_list[i][j][2]) {
+                    if (snp_list[i][j][0] != snp_list[i][j][1]) {
                         het_ratio[j]++;
                     }
                 } else {
@@ -3490,7 +3490,7 @@ int vcf_to_hap(vector<string> params) {
                 }
                 
                 if (snp_list[i][j][0] >= 0) {
-                    if (snp_list[i][j][0] != snp_list[i][j][2]) {
+                    if (snp_list[i][j][0] != snp_list[i][j][1]) {
                         snp_het_ratio[i]++;
                     }
                 } else {
