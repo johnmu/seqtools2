@@ -3334,10 +3334,14 @@ int vcf_to_hap(vector<string> params) {
         vector<int> contents;
         contents.push_back(-1);
         contents.push_back(-1);
+        
+        snp_list.reserve(num_snp);
+        
         for (int i = 0; i < num_snp; i++) {
             snp_list.push_back(vector<vector<int> >());
             vector<vector<vector<int> > >::iterator it = snp_list.end();
             it--;
+            it->reserve(num_ind);
             for (int j = 0; j < num_ind; j++) {
                 it->push_back(contents);
             }
