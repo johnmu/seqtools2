@@ -3338,9 +3338,9 @@ int vcf_to_hap(vector<string> params) {
     }
     
     { // read in the SNPs
-        vector<int> contents;
-        contents.push_back(-1);
-        contents.push_back(-1);
+        vector<int> empty;
+        empty.push_back(-1);
+        empty.push_back(-1);
         
         string temp = "";
         ifstream vcf_file(vcf_filename.c_str(),ios::in);
@@ -3387,7 +3387,7 @@ int vcf_to_hap(vector<string> params) {
             it--;
             it->reserve(num_ind);
             for (int j = 0; j < num_ind; j++) {
-                it->push_back(contents);
+                it->push_back(empty);
             }
             
             for(int i = 9;i<(int)ll.size();i++){
