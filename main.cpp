@@ -3067,9 +3067,10 @@ int select_haps(vector<string> params) {
     }
     
     // check if we have enough individuals
-    int num_ind = (int)all_haps.size();
+    int num_ind = (int)all_haps[0].size();
+    int num_snp = (int)all_haps.size();
     
-    if(num_ind < number_test*3){
+    if(num_ind < number_test*2){
         cerr << "Not enough individuals for testing: " << num_ind << '\n';
         return 2;
     }
@@ -3121,18 +3122,24 @@ int select_haps(vector<string> params) {
         
         ofstream hap_file(temp.c_str(), ios::out);
         
-        for(int k = 0; k < num_ind; k++){
-            
-            if(binary_search(indexes.begin(),indexes.end(),k)){
-                continue;
-            }
-            
-            char h = all_haps[k][0];
-            hap_file << h << ' ' << h;
-            
-            for(int i = 1;i<(int)all_haps[k].size();i++){
-                h = all_haps[k][i];
-                hap_file << ' ' << h << ' ' << h;
+        for(int i = 0;i<num_snp;i++) {
+
+            bool first_one = true;
+            for (int k = 0; k < num_ind; k++) {
+
+                if (binary_search(indexes.begin(), indexes.end(), k)) {
+                    continue;
+                }
+
+                char h = all_haps[i][k];
+                
+                if(first_one) {
+                    hap_file << h << ' ' << h;
+                    first_one = false;
+                } else {
+                    hap_file << ' ' << h << ' ' << h;
+                }
+                
             }
             
             hap_file << '\n';
@@ -3143,6 +3150,7 @@ int select_haps(vector<string> params) {
         temp = "train_"+sample_filename;
         
         ofstream sample_file(temp.c_str(), ios::out);
+
         for(int k = 0; k < num_ind; k++){
             
             if(binary_search(indexes.begin(),indexes.end(),k)){
@@ -3162,20 +3170,25 @@ int select_haps(vector<string> params) {
         
         ofstream hap_file(temp.c_str(), ios::out);
         
-        for(int k = 0; k < num_ind; k++){
-            
-            if(!binary_search(indexes.begin(),indexes.end(),k)){
-                continue;
+
+        for (int i = 0; i < num_snp; i++) {
+            bool first_one = true;
+            for (int k = 0; k < num_ind; k++) {
+
+                if (!binary_search(indexes.begin(), indexes.end(), k)) {
+                    continue;
+                }
+
+                char h = all_haps[i][k];
+
+                if (first_one) {
+                    hap_file << h << ' ' << h;
+                    first_one = false;
+                } else {
+                    hap_file << ' ' << h << ' ' << h;
+                }
+
             }
-            
-            char h = all_haps[k][0];
-            hap_file << h << ' ' << h;
-            
-            for(int i = 1;i<(int)all_haps[k].size();i++){
-                h = all_haps[k][i];
-                hap_file << ' ' << h << ' ' << h;
-            }
-            
             hap_file << '\n';
         }
         
@@ -3202,36 +3215,39 @@ int select_haps(vector<string> params) {
         int test_pair[2] = {0,0};
         
         string temp = "test_"+hap_filename;
-        
+
         ofstream hap_file(temp.c_str(), ios::out);
-        
-        for(int k = 0; k < num_ind; k++){
-            
-            if(!binary_search(indexes.begin(),indexes.end(),k)){
-                continue;
-            }
-            
-            int p = test_idx % 2;
 
-            test_pair[p] = k;
+        for (int i = 0; i < num_snp; i++) {
+            bool first_one = true;
 
-            if (p == 1) {
-                char h1 = all_haps[test_pair[0]][0];
-                char h2 = all_haps[test_pair[1]][0];
-                hap_file << h1 << ' ' << h2;
+            for (int k = 0; k < num_ind; k++) {
 
-                for (int i = 1; i < (int)all_haps[k].size(); i++) {
-                    h1 = all_haps[test_pair[0]][i];
-                    h2 = all_haps[test_pair[1]][i];
-                    hap_file << ' ' << h1 << ' ' << h2;
+                if (!binary_search(indexes.begin(), indexes.end(), k)) {
+                    continue;
                 }
 
-                hap_file << '\n';
+                int p = test_idx % 2;
+
+                test_pair[p] = k;
+
+                if (p == 1) {
+                    char h1 = all_haps[i][test_pair[0]];
+                    char h2 = all_haps[i][test_pair[1]];
+                    
+                    if(first_one){
+                        hap_file << h1 << ' ' << h2;
+                        first_one = false;
+                    }else{
+                        hap_file << ' ' << h1 << ' ' << h2;
+                    }
+                }
+
+                test_idx++;
             }
             
-            test_idx++;
+            hap_file << '\n';
         }
-        
         hap_file.close();
         
         test_idx = 0;
