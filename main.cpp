@@ -3397,10 +3397,18 @@ int vcf_to_hap(vector<string> params) {
                 if(!(snpl[0] == '.')){
                     snp_list[snp_idx][i-9][0] = snpl[0]-48;
                     snp_list[snp_idx][i-9][1] = snpl[2]-48;
+
+                    if (i == 9){
+                        cerr << (int) snp_list[snp_idx][i - 9][0] << ","
+                            << snp_list[snp_idx][i - 9][1] << '\n';
+                        if(snpl[0] != snpl[2]){
+                            cerr << "HETT\n";
+                        }
+                    }
+                    
                 }
                 
-                cerr << (int)snp_list[snp_idx][i-9][0] << "," 
-                        << snp_list[snp_idx][i-9][1] << '\n';
+
             }
             
             lib_list.push_back(contents);
@@ -3503,6 +3511,7 @@ int vcf_to_hap(vector<string> params) {
             } else {
                 snp_het_ratio[i] = 1;
             }
+            
             snp_mis_ratio[i] = snp_mis_ratio[i] / num_good_ind;
         }
         
