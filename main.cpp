@@ -3350,7 +3350,14 @@ int vcf_to_hap(vector<string> params) {
         
         int snp_idx = 0;
         
+        int count = 0;
+        
         while(getline(vcf_file,temp)){
+            count++;
+            if (count % 10000 = 0){
+                cerr << "Reading line: " << count < '\n';
+            }
+
             trim2(temp);
             if(temp.length()<2){
                 continue;
@@ -3376,12 +3383,20 @@ int vcf_to_hap(vector<string> params) {
             contents.push_back(ll[3]); // allele1
             contents.push_back(ll[4]); // allele2
             
+            cerr << "---" << ll[1] << "\n";
+            
             for(int i = 9;i<(int)ll.size();i++){
                 string snpl = ll[i];
+                
+                cerr << "SNP string: " << snpl << '\n';
+                
                 if(!(snpl[0] == '.')){
                     snp_list[snp_idx][i-9][0] = snpl[0]-48;
                     snp_list[snp_idx][i-9][1] = snpl[2]-48;
                 }
+                
+                cerr << (int)snp_list[snp_idx][i-9][0] << "," 
+                        << snp_list[snp_idx][i-9][1] << '\n';
             }
             
             lib_list.push_back(contents);
