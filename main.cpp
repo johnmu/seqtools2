@@ -3421,7 +3421,11 @@ int vcf_to_hap(vector<string> params) {
         }
         
         vcf_file.close();
+        
+        num_snp = snp_idx;
     }
+    
+    
     
     vector<double> het_ratio(num_ind,0.0);
     vector<double> mis_ratio(num_ind,0.0);
