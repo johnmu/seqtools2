@@ -3354,8 +3354,8 @@ int vcf_to_hap(vector<string> params) {
         
         while(getline(vcf_file,temp)){
             count++;
-            if (count % 10000 = 0){
-                cerr << "Reading line: " << count < '\n';
+            if (count % 10000 == 0){
+                cerr << "Reading line: " << count << '\n';
             }
 
             trim2(temp);
