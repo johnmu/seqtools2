@@ -3392,13 +3392,12 @@ int vcf_to_hap(vector<string> params) {
             for(int i = 9;i<(int)ll.size();i++){
                 string snpl = ll[i];
                 
-                cerr << "SNP string: " << snpl << '\n';
-                
                 if(!(snpl[0] == '.')){
                     snp_list[snp_idx][i-9][0] = snpl[0]-48;
                     snp_list[snp_idx][i-9][1] = snpl[2]-48;
 
                     if (i == 9){
+                        cerr << "SNP string: " << snpl << '\n';
                         cerr << (int) snp_list[snp_idx][i - 9][0] << ","
                             << snp_list[snp_idx][i - 9][1] << '\n';
                         if(snpl[0] != snpl[2]){
