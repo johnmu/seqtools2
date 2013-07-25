@@ -2982,25 +2982,21 @@ int subseq(vector<string> params) {
 
 
 int select_haps(vector<string> params) {
-    string usage_text = "Usage: " + PROG_NAME + " select_haps <hap_file> <sample_file> <legend_file> <test_size> [seed]\n"
+    string usage_text = "Usage: " + PROG_NAME + " select_haps <hap_file_prefix> <test_size> [seed]\n"
             + "    hap_file           -- File with the haplotypes\n"
-            + "    sample_file        -- The sample file associated with the hap file\n"
-            + "    legend_file        -- The legend file associated with the hap file\n"
             + "    test_size          -- The size of test set (each test sample needs 2 individuals)\n"
             + "    seed               -- Optional seed for random number generator\n"
             + "Randomly select some haplotypes and generate test and train set";
 
 
 
-    if (params.size() < 4 || params.size() > 5) {
+    if (params.size() < 2 || params.size() > 3) {
         cerr << usage_text << endl;
         return 3;
     }
 
-    string hap_filename = params[0];
-    string sample_filename = params[1];
-    string legend_filename = params[2];
-    int number_test = strTo<int>(params[3]);
+    string hap_prefix = params[0];
+    int number_test = strTo<int>(params[1]);
     
     if(number_test <= 0){
         cerr << "Must have at least one test\n";
@@ -3008,27 +3004,36 @@ int select_haps(vector<string> params) {
     }
     
     uint64_t seed = 0;
-    if(params.size() == 5){
-        seed = strTo<int>(params[3]);
+    if(params.size() == 3){
+        seed = strTo<int>(params[2]);
     }
     
     MT_random randgen(seed);
 
     { // Check each of the files can be opened
-        ifstream hap_file(hap_filename.c_str(), ios::in);
+        string temp = hap_prefix + ".hap";
+        ifstream hap_file(temp.c_str(), ios::in);
         if (!hap_file.is_open()) {
-            cerr << "Cannot open: " << hap_filename << '\n';
+            cerr << "Cannot open: " << temp << '\n';
             return 1;
         }
         hap_file.close();
 
-
-        ifstream sample_file(sample_filename.c_str(), ios::in);
+        temp = hap_prefix + ".sample";
+        ifstream sample_file(temp.c_str(), ios::in);
         if (!sample_file.is_open()) {
-            cerr << "Cannot open: " << sample_filename << '\n';
+            cerr << "Cannot open: " << temp << '\n';
             return 1;
         }
         sample_file.close();
+        
+        temp = hap_prefix + ".legend";
+        ifstream legned_file(temp.c_str(), ios::in);
+        if (!legned_file.is_open()) {
+            cerr << "Cannot open: " << temp << '\n';
+            return 1;
+        }
+        legned_file.close();
     }
 
 
@@ -3036,10 +3041,9 @@ int select_haps(vector<string> params) {
     // also count the number of individuals
     vector < vector<char> > all_haps;
     {
-        ifstream hap_file(hap_filename.c_str(), ios::in);
+        string temp = hap_prefix + ".hap";
+        ifstream hap_file(temp.c_str(), ios::in);
 
-        string temp;
-        
         while(getline(hap_file,temp)){
             trim2(temp);
             
@@ -3081,8 +3085,12 @@ int select_haps(vector<string> params) {
     
     vector<string> all_samples;
     {
-        ifstream sample_file(sample_filename.c_str(), ios::in);
-        string temp;
+        string temp = hap_prefix + ".sample";
+        ifstream sample_file(temp.c_str(), ios::in);
+
+        // get the header line
+        getline(sample_file,temp);
+        
         while(getline(sample_file,temp)){
             trim2(temp);
             
@@ -3099,8 +3107,12 @@ int select_haps(vector<string> params) {
     vector<vector<string> > all_legend;
     all_legend.reserve(num_snp);
     {
-        ifstream legend_file(legend_filename.c_str(), ios::in);
-        string temp;
+        string temp = hap_prefix + ".legend";
+        ifstream legend_file(temp.c_str(), ios::in);
+
+        // get the header line
+        getline(legend_file,temp);
+        
         while(getline(legend_file,temp)){
             trim2(temp);
             
@@ -3142,7 +3154,7 @@ int select_haps(vector<string> params) {
     
     // output the training set files
     {
-        string temp = "train_"+hap_filename;
+        string temp = "train_"+ hap_prefix +".hap";
         
         ofstream hap_file(temp.c_str(), ios::out);
         
@@ -3171,10 +3183,10 @@ int select_haps(vector<string> params) {
         
         hap_file.close();
         
-        temp = "train_"+sample_filename;
+        temp = "train_"+hap_prefix +".sample";
         
         ofstream sample_file(temp.c_str(), ios::out);
-
+        sample_file << "sample population group sex\n";
         for(int k = 0; k < num_ind; k++){
             
             if(binary_search(indexes.begin(),indexes.end(),k)){
@@ -3190,10 +3202,9 @@ int select_haps(vector<string> params) {
     random_shuffle(perm_indexes.begin(),perm_indexes.end());
     
     {
-        string temp = "true_"+hap_filename;
+        string temp = "true_"+hap_prefix +".hap";
         
         ofstream hap_file(temp.c_str(), ios::out);
-        
 
         for (int i = 0; i < num_snp; i++) {
             bool first_one = true;
@@ -3218,9 +3229,10 @@ int select_haps(vector<string> params) {
         
         hap_file.close();
         
-        temp = "true_"+sample_filename;
+        temp = "true_"+hap_prefix +".sample";
         
         ofstream sample_file(temp.c_str(), ios::out);
+        sample_file << "sample population group sex\n";
         for(int k = 0; k < num_ind; k++){
             
             if(!binary_search(indexes.begin(),indexes.end(),k)){
@@ -3237,17 +3249,9 @@ int select_haps(vector<string> params) {
     {
         int test_idx = 0;
         int test_pair[2] = {0,0};
+
         
-        vector<string> ll = split(hap_filename,'.');
-        string prefix_name = hap_filename;
-        if(ll.size() >= 2){
-            prefix_name = "";
-            for(int idx = 0;idx<(int)(ll.size()-1);idx++){
-                prefix_name += ll[idx] + ".";
-            }
-        }
-        
-        string temp = "test_"+prefix_name+"gen";
+        string temp = "test_"+hap_prefix+".gen";
 
         ofstream gen_file(temp.c_str(), ios::out);
 
@@ -3302,19 +3306,30 @@ int select_haps(vector<string> params) {
         
         test_idx = 0;
         
-        temp = "test_"+sample_filename; // this sample file is fake
+        temp = "test_"+hap_prefix+".sample"; // this sample file is fake
+        
+        vector<string> pair_temp(2,"");
         
         ofstream sample_file(temp.c_str(), ios::out);
+        
+        sample_file << "ID_1 ID_2 missing\n"; 
+        sample_file << "0 0 0\n"; 
+        
         for(int k = 0; k < num_ind; k++){
             
             if(!binary_search(indexes.begin(),indexes.end(),k)){
                 continue;
             }
             
+            vector<string> ll = split(all_samples[k]);
+            
             int p = test_idx % 2;
+            pair_temp[p] = ll[0];
             
             if (p == 1) {
-                sample_file << all_samples[k] << '\n';
+ 
+                sample_file << pair_temp[0] << ' ' << pair_temp[1] << " 0\n";
+               
             }
             test_idx++;
         }
@@ -3648,6 +3663,7 @@ int vcf_to_hap(vector<string> params) {
     { // write SAMPLE file
         string temp = vcf_filename + ".sample";
         ofstream out_file(temp.c_str(),ios::out);
+        out_file << "sample population group sex\n";
         for(int j = 0; j < num_ind; j++){
             if(bad_ind[j] > 0){
                 continue;
@@ -3660,6 +3676,7 @@ int vcf_to_hap(vector<string> params) {
     { // write LEGNED file
         string temp = vcf_filename + ".legend";
         ofstream out_file(temp.c_str(), ios::out);
+        out_file << "id position a0 a1\n";
         for(int i = 0;i<num_snp;i++){
             if(bad_snp[i] > 0){
                 continue;
