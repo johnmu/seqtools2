@@ -3247,7 +3247,7 @@ int select_haps(vector<string> params) {
     // output the test samples for input into the program
     // need to output in gen/sample format
     {
-        int test_idx = 0;
+        
         int test_pair[2] = {0,0};
 
         
@@ -3265,6 +3265,7 @@ int select_haps(vector<string> params) {
             gen_file << all_legend[i][0] << ' ' << all_legend[i][1] << ' ';
             gen_file << all_legend[i][2] << ' ' << all_legend[i][3] << ' ';
             
+            int test_idx = 0;
 
             for (int k = 0; k < num_ind; k++) {
 
