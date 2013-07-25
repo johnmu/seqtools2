@@ -3316,6 +3316,8 @@ int select_haps(vector<string> params) {
         sample_file << "ID_1 ID_2 missing\n"; 
         sample_file << "0 0 0\n"; 
         
+        int test_idx = 0;
+        
         for(int k = 0; k < num_ind; k++){
             
             if(!binary_search(indexes.begin(),indexes.end(),k)){
