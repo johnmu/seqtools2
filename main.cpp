@@ -3305,7 +3305,7 @@ int select_haps(vector<string> params) {
         }
         gen_file.close();
         
-        test_idx = 0;
+        
         
         temp = "test_"+hap_prefix+".sample"; // this sample file is fake
         
