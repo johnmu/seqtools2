@@ -2982,23 +2982,25 @@ int subseq(vector<string> params) {
 
 
 int select_haps(vector<string> params) {
-    string usage_text = "Usage: " + PROG_NAME + " select_haps <hap_file> <sample_file> <test_size> [seed]\n"
+    string usage_text = "Usage: " + PROG_NAME + " select_haps <hap_file> <sample_file> <legend_file> <test_size> [seed]\n"
             + "    hap_file           -- File with the haplotypes\n"
             + "    sample_file        -- The sample file associated with the hap file\n"
+            + "    legend_file        -- The legend file associated with the hap file\n"
             + "    test_size          -- The size of test set (each test sample needs 2 individuals)\n"
             + "    seed               -- Optional seed for random number generator\n"
             + "Randomly select some haplotypes and generate test and train set";
 
 
 
-    if (params.size() < 3 || params.size() > 4) {
+    if (params.size() < 4 || params.size() > 5) {
         cerr << usage_text << endl;
         return 3;
     }
 
     string hap_filename = params[0];
     string sample_filename = params[1];
-    int number_test = strTo<int>(params[2]);
+    string legend_filename = params[2];
+    int number_test = strTo<int>(params[3]);
     
     if(number_test <= 0){
         cerr << "Must have at least one test\n";
@@ -3006,7 +3008,7 @@ int select_haps(vector<string> params) {
     }
     
     uint64_t seed = 0;
-    if(params.size() == 4){
+    if(params.size() == 5){
         seed = strTo<int>(params[3]);
     }
     
@@ -3092,6 +3094,28 @@ int select_haps(vector<string> params) {
         
         sample_file.close();
     }
+    
+    // read in the legend file
+    vector<vector<string> > all_legend;
+    all_legend.reserve(num_snp);
+    {
+        ifstream legend_file(legend_filename.c_str(), ios::in);
+        string temp;
+        while(getline(legend_file,temp)){
+            trim2(temp);
+            
+            if(temp.length() == 0){
+                continue;
+            }
+            
+            vector<string> ll = split(temp);
+            
+            all_legend.push_back(ll);
+        }
+        
+        legend_file.close();
+    }
+    
     
     
     // sample without replacement the test set indexes
@@ -3209,17 +3233,31 @@ int select_haps(vector<string> params) {
     }
     
     // output the test samples for input into the program
-    
+    // need to output in gen/sample format
     {
         int test_idx = 0;
         int test_pair[2] = {0,0};
         
-        string temp = "test_"+hap_filename;
+        vector<string> ll = split(hap_filename,'.');
+        string prefix_name = hap_filename;
+        if(ll.size() == 2){
+            prefix_name = ll[0];
+        }
+        
+        string temp = "test_"+prefix_name+".gen";
 
-        ofstream hap_file(temp.c_str(), ios::out);
+        ofstream gen_file(temp.c_str(), ios::out);
 
         for (int i = 0; i < num_snp; i++) {
             bool first_one = true;
+            
+            // output SNP details
+            // always output chr24...
+            gen_file << "24 ";
+            
+            gen_file << all_legend[i][0] << ' ' << all_legend[i][1] << ' ';
+            gen_file << all_legend[i][2] << ' ' << all_legend[i][3] << ' ';
+            
 
             for (int k = 0; k < num_ind; k++) {
 
@@ -3236,19 +3274,19 @@ int select_haps(vector<string> params) {
                     char h2 = all_haps[i][test_pair[1]];
                     
                     if(first_one){
-                        hap_file << h1 << ' ' << h2;
+                        gen_file << h1 << ' ' << h2;
                         first_one = false;
                     }else{
-                        hap_file << ' ' << h1 << ' ' << h2;
+                        gen_file << ' ' << h1 << ' ' << h2;
                     }
                 }
 
                 test_idx++;
             }
             
-            hap_file << '\n';
+            gen_file << '\n';
         }
-        hap_file.close();
+        gen_file.close();
         
         test_idx = 0;
         
