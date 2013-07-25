@@ -3240,11 +3240,14 @@ int select_haps(vector<string> params) {
         
         vector<string> ll = split(hap_filename,'.');
         string prefix_name = hap_filename;
-        if(ll.size() == 2){
-            prefix_name = ll[0];
+        if(ll.size() >= 2){
+            prefix_name = "";
+            for(int idx = 0;idx<(int)(ll.size()-1);idx++){
+                prefix_name += ll[idx] + ".";
+            }
         }
         
-        string temp = "test_"+prefix_name+".gen";
+        string temp = "test_"+prefix_name+"gen";
 
         ofstream gen_file(temp.c_str(), ios::out);
 
