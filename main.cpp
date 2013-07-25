@@ -3285,7 +3285,7 @@ int select_haps(vector<string> params) {
                     }else if(h1 == '1'){
                         gen_file << "0 0 1";
                     }else{
-                        cerr << "strange hap: " << h1 << '\n';
+                        gen_file << "0 0 0";
                     }
                     
                 }
