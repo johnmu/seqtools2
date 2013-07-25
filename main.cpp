@@ -3274,11 +3274,20 @@ int select_haps(vector<string> params) {
                     char h2 = all_haps[i][test_pair[1]];
                     
                     if(first_one){
-                        gen_file << h1 << ' ' << h2;
                         first_one = false;
                     }else{
-                        gen_file << ' ' << h1 << ' ' << h2;
+                        gen_file << ' ';
                     }
+                    if(h1 != h2){
+                        gen_file << "0 1 0";
+                    }else if(h1 == '0'){
+                        gen_file << "1 0 0";
+                    }else if(h1 == '1'){
+                        gen_file << "0 0 1";
+                    }else{
+                        cerr << "strange hap: " << h1 << '\n';
+                    }
+                    
                 }
 
                 test_idx++;
