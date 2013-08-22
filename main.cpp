@@ -3000,7 +3000,7 @@ int select_haps(vector<string> params) {
     
     if(number_test <= 0){
         cerr << "Must have at least one test\n";
-        return 2;
+        //return 2;
     }
     
     uint64_t seed = 0;
@@ -3217,11 +3217,12 @@ int select_haps(vector<string> params) {
                 char h = all_haps[i][k];
 
                 if (first_one) {
-                    hap_file << h << ' ' << h;
                     first_one = false;
                 } else {
-                    hap_file << ' ' << h << ' ' << h;
+                    hap_file << ' ';
                 }
+                
+                hap_file << h;
 
             }
             hap_file << '\n';
