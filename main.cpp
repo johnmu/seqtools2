@@ -1277,22 +1277,34 @@ int sam_quals(vector<string> params) {
     string filename = params[0];
     int offset = strTo<int>(params[1]);
 
+    vector<string> prefix = split(filename,'.');
     
     ifstream infile;
-
+    int num_lines = 0;
+    
     infile.open(filename.c_str(), ios::in);
 
     if (!infile.is_open()) {
         cerr << "Error: cannot open input file: " << filename << '\n';
         return 3;
+    }else{
+        // count the number of lines in the file
+        string temp;
+        while (std::getline(infile, temp)) {
+            num_lines++;
+        }
     }
 
     infile.close();
-
-
+    cerr << "Number of lines: " << num_lines << '\n';
+    
+    string out_name = prefix[0]+"_qual_0.txt";
+    ofstream out_file(out_name.c_str(),ios::out);
+    
     infile.open(filename.c_str(), ios::in);
     string line = "";
-
+    int idx = 0;
+    int lines_read = 0;
     while (!infile.eof()) {
         getline(infile,line);
         
@@ -1302,8 +1314,17 @@ int sam_quals(vector<string> params) {
             continue;            
         }
         
+        int lines_left = num_lines - idx;
+        
         if(line[0] == '@'){
             continue;
+        }
+        
+        if(lines_read > 2500000 && lines_left >= 2500000){
+            out_file.close();
+            lines_read = 0;
+            string out_name = prefix[0]+"_qual_"+toStr<int>(idx)+".txt";
+            out_file.open(out_name.c_str(),ios::out);
         }
 
         vector<string> line_list = split(line);
@@ -1341,16 +1362,19 @@ int sam_quals(vector<string> params) {
         
         // print it out
         
-        cout << (int)(quals[0] - offset);
+        out_file << (int)(quals[0] - offset);
         
         for (int i = 1;i < (int)quals.length(); i++){
-            cout << '\t' << (int)(quals[i] - offset) ;
+            out_file << ' ' << (int)(quals[i] - offset) ;
         }
         
-        cout << "\n";
+        out_file << "\n";
                 
-
+        idx++;
+        lines_read++;
     }
+    
+    out_file.close();
 
 
     return 0;
