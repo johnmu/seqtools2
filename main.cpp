@@ -2088,17 +2088,19 @@ int compare_vcf(vector<string> params) {
                 new_idx++;
             }
 
-            // output stats
-            cout << qual_cut << '\t'
-                    << orig_total_snps << '\t'
-                    << new_total_snps << '\t'
-                    << unique_to_orig_snps << '\t'
-                    << unique_to_new_snps << '\t'
-                    << in_both_snps << '\t'
-                    << new_is_het_wrong << '\t'
-                    << new_is_hom_wrong << '\t'
-                    << new_allele_wrong << '\n';
+
         }
+
+        // output stats
+        cout << qual_cut << '\t'
+                << orig_total_snps << '\t'
+                << new_total_snps << '\t'
+                << unique_to_orig_snps << '\t'
+                << unique_to_new_snps << '\t'
+                << in_both_snps << '\t'
+                << new_is_het_wrong << '\t'
+                << new_is_hom_wrong << '\t'
+                << new_allele_wrong << '\n';
     }
 
 
