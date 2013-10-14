@@ -1916,7 +1916,7 @@ void read_snp_vcf(string filename, vector<vcf_data> &vcf) {
             continue;
         }
 
-        if (!(alt.length() == 1 || (alt.length() == 3 && alt[2] == ','))) {
+        if (!(alt.length() == 1 || (alt.length() == 3 && alt[1] == ','))) {
             cerr << "Something wrong (alt): " << line << '\n';
             continue;
         }
