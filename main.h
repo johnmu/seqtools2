@@ -141,6 +141,7 @@ int fastq_trim(vector<string> params);
 int barcode_split(vector<string> params);
 int pair_split(vector<string> params);
 int raw2fasta(vector<string> params);
+int compare_vcf(vector<string> params);
 
 int select_haps(vector<string> params);
 int vcf_to_hap(vector<string> params);

@@ -109,6 +109,9 @@ int main(int argc, char * const argv[]) {
     } else if (mode == "replace_sam_quals") {
 
         error_num = replace_sam_quals(params);
+    } else if (mode == "compare_vcf") {
+
+        error_num = compare_vcf(params);
     } else if (mode == "replace_sam_quals_diff") {
 
         error_num = replace_sam_quals_diff(params);
@@ -141,28 +144,28 @@ int main(int argc, char * const argv[]) {
     return error_num;
 }
 
-inline vector<b_store_pair>::iterator search_barcode(vector<b_store_pair> &vec,string barcode, int num_mm){
+inline vector<b_store_pair>::iterator search_barcode(vector<b_store_pair> &vec, string barcode, int num_mm) {
     vector<b_store_pair>::iterator out = vec.end();
 
-    for (vector<b_store_pair>::iterator i = vec.begin();i!= vec.end();i++){
+    for (vector<b_store_pair>::iterator i = vec.begin(); i != vec.end(); i++) {
 
         int mm = 0;
 
-        if(barcode.length() != i->code.length()){
+        if (barcode.length() != i->code.length()) {
             cerr << "Warning: Barcode length wrong, " << barcode << '\n';
         }
 
-        for(int j = 0;j<(int)barcode.length();j++){
-            if(barcode[j] != i->code[j]){
+        for (int j = 0; j < (int) barcode.length(); j++) {
+            if (barcode[j] != i->code[j]) {
                 mm++;
-                if(mm>num_mm) break;
+                if (mm > num_mm) break;
             }
         }
 
-        if(mm < num_mm){
-            if(out == vec.end()){
+        if (mm < num_mm) {
+            if (out == vec.end()) {
                 out = i;
-            }else{
+            } else {
                 return vec.end();
             }
         }
@@ -172,7 +175,6 @@ inline vector<b_store_pair>::iterator search_barcode(vector<b_store_pair> &vec,s
 
     return out;
 }
-
 
 int pair_split(vector<string> params) {
     string usage_text = "Usage: " + PROG_NAME + " pair_split <barcode_file> <file1> <file2>\n"
@@ -232,16 +234,16 @@ int pair_split(vector<string> params) {
 
     int num_unmatched = 0;
     ofstream unmatched_out1;
-    string temp = "unmatched_"+pair1;
-    unmatched_out1.open(temp.c_str(),ios::out);
-    if(!unmatched_out1.is_open()){
+    string temp = "unmatched_" + pair1;
+    unmatched_out1.open(temp.c_str(), ios::out);
+    if (!unmatched_out1.is_open()) {
         cerr << "ERROR: could not write, " << temp << '\n';
         return 2;
     }
     ofstream unmatched_out2;
-    temp = "unmatched_"+pair2;
-    unmatched_out2.open(temp.c_str(),ios::out);
-    if(!unmatched_out2.is_open()){
+    temp = "unmatched_" + pair2;
+    unmatched_out2.open(temp.c_str(), ios::out);
+    if (!unmatched_out2.is_open()) {
         cerr << "ERROR: could not write, " << temp << '\n';
         return 2;
     }
@@ -249,24 +251,24 @@ int pair_split(vector<string> params) {
 
     string line;
 
-    while(!barcodefile.eof()){
-        getline(barcodefile,line);
+    while (!barcodefile.eof()) {
+        getline(barcodefile, line);
         trim2(line);
 
-        if(line.length() == 0){
+        if (line.length() == 0) {
             continue;
         }
 
         vector<string> line_list = split(line);
 
-        if(line_list.size() != 2){
+        if (line_list.size() != 2) {
             cerr << "ERROR: Bad barcode file format: " << line << '\n';
             return 1;
         }
 
-        if(barcode_len == 0){
+        if (barcode_len == 0) {
             barcode_len = line_list[0].length();
-        }else if(barcode_len != (int)line_list[0].length()){
+        } else if (barcode_len != (int) line_list[0].length()) {
             cerr << "ERROR: Barcode not all same length\n";
             return 2;
 
@@ -274,21 +276,21 @@ int pair_split(vector<string> params) {
 
         b_store_pair contents;
 
-        contents.code  = line_list[0];
-        contents.name  = line_list[1];
+        contents.code = line_list[0];
+        contents.name = line_list[1];
         contents.count = 0;
         string temp_name = line_list[1] + "_" + line_list[0] + "_" + pair1;
-        contents.outfile1 = new ofstream(temp_name.c_str(),ios::out);
+        contents.outfile1 = new ofstream(temp_name.c_str(), ios::out);
 
-        if(!contents.outfile1->is_open()){
+        if (!contents.outfile1->is_open()) {
             cerr << "ERROR: cannot create file: " << temp_name << '\n';
             return 2;
         }
 
         temp_name = line_list[1] + "_" + line_list[0] + "_" + pair2;
-        contents.outfile2 = new ofstream(temp_name.c_str(),ios::out);
+        contents.outfile2 = new ofstream(temp_name.c_str(), ios::out);
 
-        if(!contents.outfile2->is_open()){
+        if (!contents.outfile2->is_open()) {
             cerr << "ERROR: cannot create file: " << temp_name << '\n';
             return 2;
         }
@@ -301,12 +303,12 @@ int pair_split(vector<string> params) {
 
     barcodefile.close();
 
-    if(barcode_vec.size() == 0){
+    if (barcode_vec.size() == 0) {
         cerr << "ERROR: empty barcode file\n";
         return 1;
     }
 
-    sort(barcode_vec.begin(),barcode_vec.end());
+    sort(barcode_vec.begin(), barcode_vec.end());
 
 
     fast in1(pair1, false);
@@ -347,18 +349,18 @@ int pair_split(vector<string> params) {
         }
 
         vector<b_store_pair>::iterator code_loc = barcode_vec.end();
-        if(barcode1 == barcode2){
-            code_loc = search_barcode(barcode_vec,barcode1, 1);
+        if (barcode1 == barcode2) {
+            code_loc = search_barcode(barcode_vec, barcode1, 1);
         }
 
-        if(!(code_loc == barcode_vec.end())){
+        if (!(code_loc == barcode_vec.end())) {
 
             if (line1.qual_exist) {
                 *(code_loc->outfile1) << "@" << line1.name << '\n';
                 *(code_loc->outfile1) << line1.seq << '\n';
                 *(code_loc->outfile1) << "+" << '\n';
                 *(code_loc->outfile1) << line1.qual << '\n';
-            }else{
+            } else {
                 *(code_loc->outfile1) << ">" << line1.name << '\n';
                 *(code_loc->outfile1) << line1.seq << '\n';
             }
@@ -368,13 +370,13 @@ int pair_split(vector<string> params) {
                 *(code_loc->outfile2) << line2.seq << '\n';
                 *(code_loc->outfile2) << "+" << '\n';
                 *(code_loc->outfile2) << line2.qual << '\n';
-            }else{
+            } else {
                 *(code_loc->outfile2) << ">" << line2.name << '\n';
                 *(code_loc->outfile2) << line2.seq << '\n';
             }
 
             code_loc->count++;
-        }else{
+        } else {
             if (line1.qual_exist) {
                 unmatched_out1 << "@" << line1.name << '\n';
                 unmatched_out1 << line1.seq << '\n';
@@ -393,7 +395,7 @@ int pair_split(vector<string> params) {
                 unmatched_out2 << line2.seq << '\n';
                 unmatched_out2 << "+" << '\n';
                 unmatched_out2 << line2.qual << '\n';
-            }else{
+            } else {
                 unmatched_out2 << ">" << line2.name << '\n';
                 unmatched_out2 << line2.seq << '\n';
             }
@@ -404,7 +406,7 @@ int pair_split(vector<string> params) {
 
     }
 
-    if(!in2.eof()){
+    if (!in2.eof()) {
         cerr << "Warning... files different lengths :S \n";
     }
 
@@ -412,7 +414,7 @@ int pair_split(vector<string> params) {
     unmatched_out2.close();
 
     // output stats
-    for(vector<b_store_pair>::iterator it = barcode_vec.begin();it != barcode_vec.end();it++){
+    for (vector<b_store_pair>::iterator it = barcode_vec.begin(); it != barcode_vec.end(); it++) {
         cout << it->name << "," << it->code << "," << it->count << '\n';
         it->outfile1->close();
         it->outfile2->close();
@@ -441,7 +443,7 @@ int barcode_split(vector<string> params) {
     string filename = params[1];
     int mode = strTo<int>(params[2]);
 
-    if(mode < 0 || mode > 2){
+    if (mode < 0 || mode > 2) {
         cerr << "ERROR: mode wrong \n";
         return 3;
     }
@@ -476,9 +478,9 @@ int barcode_split(vector<string> params) {
 
     int num_unmatched = 0;
     ofstream unmatched_out;
-    string temp = "unmatched_"+filename;
-    unmatched_out.open(temp.c_str(),ios::out);
-    if(!unmatched_out.is_open()){
+    string temp = "unmatched_" + filename;
+    unmatched_out.open(temp.c_str(), ios::out);
+    if (!unmatched_out.is_open()) {
         cerr << "ERROR: could not write, " << temp << '\n';
         return 2;
     }
@@ -486,24 +488,24 @@ int barcode_split(vector<string> params) {
 
     string line;
 
-    while(!barcodefile.eof()){
-        getline(barcodefile,line);
+    while (!barcodefile.eof()) {
+        getline(barcodefile, line);
         trim2(line);
 
-        if(line.length() == 0){
+        if (line.length() == 0) {
             continue;
         }
 
         vector<string> line_list = split(line);
 
-        if(line_list.size() != 2){
+        if (line_list.size() != 2) {
             cerr << "ERROR: Bad barcode file format: " << line << '\n';
             return 1;
         }
 
-        if(barcode_len == 0){
+        if (barcode_len == 0) {
             barcode_len = line_list[0].length();
-        }else if(barcode_len != (int)line_list[0].length()){
+        } else if (barcode_len != (int) line_list[0].length()) {
             cerr << "ERROR: Barcode not all same length\n";
             return 2;
 
@@ -511,13 +513,13 @@ int barcode_split(vector<string> params) {
 
         b_store contents;
 
-        contents.code  = line_list[0];
-        contents.name  = line_list[1];
+        contents.code = line_list[0];
+        contents.name = line_list[1];
         contents.count = 0;
         string temp_name = line_list[1] + "_" + line_list[0] + "_" + filename;
-        contents.outfile = new ofstream(temp_name.c_str(),ios::out);
+        contents.outfile = new ofstream(temp_name.c_str(), ios::out);
 
-        if(!contents.outfile->is_open()){
+        if (!contents.outfile->is_open()) {
             cerr << "ERROR: cannot create file: " << temp_name << '\n';
             return 2;
         }
@@ -530,12 +532,12 @@ int barcode_split(vector<string> params) {
 
     barcodefile.close();
 
-    if(barcode_vec.size() == 0){
+    if (barcode_vec.size() == 0) {
         cerr << "ERROR: empty barcode file\n";
         return 1;
     }
 
-    sort(barcode_vec.begin(),barcode_vec.end());
+    sort(barcode_vec.begin(), barcode_vec.end());
 
 
 
@@ -574,10 +576,10 @@ int barcode_split(vector<string> params) {
                 string seq;
                 string qual;
 
-                if (mode == 0){
+                if (mode == 0) {
                     seq = line.seq.substr(barcode_len);
                     if (line.qual_exist) qual = line.qual.substr(barcode_len);
-                }else if(mode == 1){
+                } else if (mode == 1) {
                     seq = line.seq;
                     if (line.qual_exist) qual = line.qual;
                 }
@@ -615,14 +617,14 @@ int barcode_split(vector<string> params) {
             }
 
         }
-    }else if(mode == 2){
+    } else if (mode == 2) {
         // SAM
 
         ifstream in(filename.c_str(), ios::in);
         string line;
 
         while (!in.eof()) {
-            getline(in,line);
+            getline(in, line);
 
             trim2(line);
 
@@ -644,7 +646,7 @@ int barcode_split(vector<string> params) {
             vector<b_store>::iterator it = lower_bound(barcode_vec.begin(), barcode_vec.end(), search);
 
             if (it != barcode_vec.end() && it->code == search.code) {
-                *(it->outfile) <<  line << '\n';
+                *(it->outfile) << line << '\n';
                 it->count++;
 
             } else {
@@ -663,7 +665,7 @@ int barcode_split(vector<string> params) {
     unmatched_out.close();
 
     // output stats
-    for(vector<b_store>::iterator it = barcode_vec.begin();it != barcode_vec.end();it++){
+    for (vector<b_store>::iterator it = barcode_vec.begin(); it != barcode_vec.end(); it++) {
         cout << it->name << "," << it->code << "," << it->count << '\n';
         it->outfile->close();
     }
@@ -674,8 +676,6 @@ int barcode_split(vector<string> params) {
 
     return 0;
 }
-
-
 
 int fastq_pico_trim(vector<string> params) {
     string usage_text = "Usage: " + PROG_NAME + " fastq_pico_trim <FASTA/Q_file>\n"
@@ -706,16 +706,16 @@ int fastq_pico_trim(vector<string> params) {
     while (!in.eof()) {
         fast_t line = in.get_next_record();
 
-        if ((int)line.seq.length() == 0) {
+        if ((int) line.seq.length() == 0) {
             continue;
         }
 
-        
+
 
         int start_idx = trim_phase_seq_primer(line.seq);
 
-        
-        if(line.qual_exist) {
+
+        if (line.qual_exist) {
 
             if (start_idx >= 0) {
                 if (start_idx < (int) line.seq.length() - 1) {
@@ -732,8 +732,8 @@ int fastq_pico_trim(vector<string> params) {
             cout << "+\n";
             cout << line.qual << '\n';
         } else {
-            
-            if(start_idx >= 0) {
+
+            if (start_idx >= 0) {
                 if (start_idx < (int) line.seq.length() - 1) {
                     line.seq = line.seq.substr(start_idx);
                 } else {
@@ -742,7 +742,8 @@ int fastq_pico_trim(vector<string> params) {
             }
 
             cout << '>' << line.name << '\n';
-            cout << line.seq << '\n';;
+            cout << line.seq << '\n';
+            ;
         }
 
     }
@@ -750,7 +751,6 @@ int fastq_pico_trim(vector<string> params) {
 
     return 0;
 }
-
 
 int fastq_trim(vector<string> params) {
     string usage_text = "Usage: " + PROG_NAME + " fastq_trim <min_len> <Phred_score> <FASTQ_file>\n"
@@ -765,7 +765,7 @@ int fastq_trim(vector<string> params) {
     }
 
     int min_len = strTo<int>(params[0]);
-    int qual    = strTo<int>(params[1]);
+    int qual = strTo<int>(params[1]);
     string filename = params[2];
 
     ifstream infile;
@@ -789,18 +789,18 @@ int fastq_trim(vector<string> params) {
             continue;
         }
 
-        if (!line.qual_exist){
+        if (!line.qual_exist) {
             cerr << "Error: not FASTQ file: " << line.name << '\n';
             return 2;
         }
 
         int new_len = bwa_trim_len(line.qual, qual, min_len);
 
-        if(new_len > 0){
+        if (new_len > 0) {
 
-            line.seq = line.seq.substr(0,new_len);
-            line.qual = line.qual.substr(0,new_len);
-        }else{
+            line.seq = line.seq.substr(0, new_len);
+            line.qual = line.qual.substr(0, new_len);
+        } else {
             line.seq = "N";
             line.qual = "#";
         }
@@ -817,8 +817,6 @@ int fastq_trim(vector<string> params) {
     return 0;
 }
 
-
-
 int depth_stats(vector<string> params) {
     string usage_text = "Usage: " + PROG_NAME + " depth_stats <genome_file> <depth_file>\n"
             + "Get stats for a depth file";
@@ -829,7 +827,7 @@ int depth_stats(vector<string> params) {
     }
 
     string genome_fai_file = params[0] + ".fai";
-    string depth_file  = params[1];
+    string depth_file = params[1];
 
     ifstream infile;
     int64_t chr_len = 0;
@@ -840,20 +838,20 @@ int depth_stats(vector<string> params) {
     if (!infile.is_open()) {
         cerr << "Error: cannot open genome fai file: " << genome_fai_file << '\n';
         return 3;
-    }else{
+    } else {
         string temp = "";
 
-        getline(infile,temp);
+        getline(infile, temp);
 
         trim2(temp);
 
-        if(temp.length() != 0){
+        if (temp.length() != 0) {
             vector<string> ll = split(temp);
 
-            if(ll.size() == 5){
+            if (ll.size() == 5) {
                 chr_name = ll[0];
                 chr_len = strTo<int64_t>(ll[1]);
-            }else{
+            } else {
                 cerr << "Error: Bad fai file: " << temp << '\n';
                 return 3;
             }
@@ -892,26 +890,26 @@ int depth_stats(vector<string> params) {
     int64_t prev_pos_lim = 0;
     int64_t prev_pos = 0;
 
-    while(!infile.eof()){
-        getline(infile,line);
+    while (!infile.eof()) {
+        getline(infile, line);
 
         trim2(line);
 
-        if(line.length() == 0) continue;
+        if (line.length() == 0) continue;
 
         vector<string> ll = split(line);
 
-        if(ll.size() != 3) continue;
+        if (ll.size() != 3) continue;
 
-        if(ll[0] != chr_name) continue;
+        if (ll[0] != chr_name) continue;
 
-        int64_t pos   = strTo<int64_t>(ll[1]);
-        int     depth = strTo<int>(ll[2]);
+        int64_t pos = strTo<int64_t>(ll[1]);
+        int depth = strTo<int>(ll[2]);
 
-        while(pos_counter < pos){
+        while (pos_counter < pos) {
             pos_counter++;
 
-            if(pos_counter % 100 == 0){
+            if (pos_counter % 100 == 0) {
                 depth_100.push_back(avg_depth_100);
                 avg_depth_100 = 0;
             }
@@ -921,16 +919,16 @@ int depth_stats(vector<string> params) {
         depth_sum += depth;
 
         num_pos++;
-        if(depth >= 10)num_pos_10++;
+        if (depth >= 10)num_pos_10++;
 
-        if(prev_pos==0){
+        if (prev_pos == 0) {
             prev_pos_lim = pos;
             prev_pos = pos;
         }
 
-        if(pos == prev_pos + 1){
+        if (pos == prev_pos + 1) {
             prev_pos = pos;
-        }else{
+        } else {
             // we have hit a gap!!
             int64_t contig_size = prev_pos - prev_pos_lim + 1;
             int64_t gap_size = pos - prev_pos - 1;
@@ -945,7 +943,7 @@ int depth_stats(vector<string> params) {
 
     }
 
-    while(pos_counter < chr_len) {
+    while (pos_counter < chr_len) {
         pos_counter++;
 
         if (pos_counter % 100 == 0) {
@@ -961,8 +959,8 @@ int depth_stats(vector<string> params) {
 
     infile.close();
 
-    sort(contig_store.begin(),contig_store.end());
-    sort(gap_store.begin(),gap_store.end());
+    sort(contig_store.begin(), contig_store.end());
+    sort(gap_store.begin(), gap_store.end());
 
     // output all the good stuff
     cout << "Total % of " << chr_name << " covered: ";
@@ -973,16 +971,16 @@ int depth_stats(vector<string> params) {
     output_percentage(cout, chr_len, num_pos_10);
     cout << '\n';
 
-    cout << "Average depth: " << (depth_sum/chr_len) << '\n';
+    cout << "Average depth: " << (depth_sum / chr_len) << '\n';
 
     cout << "Largest contig: " << contig_store.back() << '\n';
-    
-    if(gap_store.size() > 0) {
+
+    if (gap_store.size() > 0) {
         cout << "Largest gap:    " << gap_store.back() << '\n';
 
 
         for (int i = 1; i < min(gap_store.size() - 1, 10); i++) {
-            cout << toStr<int>(i+1) << "th Largest gap:    " << *(gap_store.end() - i - 1) << '\n';
+            cout << toStr<int>(i + 1) << "th Largest gap:    " << *(gap_store.end() - i - 1) << '\n';
         }
         // compute average gap length
         int64_t avg_len = 0;
@@ -1044,26 +1042,25 @@ int depth_stats(vector<string> params) {
         }
 
     }
-    
+
     return 0;
 }
 
-struct base_count_t{
-        int64_t A;
-        int64_t T;
-        int64_t C;
-        int64_t G;
-        int64_t N;
+struct base_count_t {
+    int64_t A;
+    int64_t T;
+    int64_t C;
+    int64_t G;
+    int64_t N;
 
-        base_count_t(){
-            A = 0;
-            C = 0;
-            T = 0;
-            G = 0;
-            N = 0;
-        }
-    };
-
+    base_count_t() {
+        A = 0;
+        C = 0;
+        T = 0;
+        G = 0;
+        N = 0;
+    }
+};
 
 int fastq_stats(vector<string> params) {
     string usage_text = "Usage: " + PROG_NAME + " fastq_stats <FASTQ_file>\n"
@@ -1138,7 +1135,7 @@ int fastq_stats(vector<string> params) {
         }
 
         for (int i = 0; i < len; i++) {
-            switch(line.seq[i]) {
+            switch (line.seq[i]) {
                 case 'A':
                     base_sum[i].A++;
                     break;
@@ -1172,16 +1169,16 @@ int fastq_stats(vector<string> params) {
 
     cout << "Avg base quality (base_idx,avg_qual):" << '\n';
 
-    for(int i = 0;i<(int)qual_sum.size();i++){
-        cout << (i+1) << ',' << ((double)qual_sum[i])/total_read_count << '\n';
+    for (int i = 0; i < (int) qual_sum.size(); i++) {
+        cout << (i + 1) << ',' << ((double) qual_sum[i]) / total_read_count << '\n';
     }
 
 
     cout << "Base ratio (base_idx,A,T,C,G,N):" << '\n';
 
-    for(int i = 0;i<(int)base_sum.size();i++){
+    for (int i = 0; i < (int) base_sum.size(); i++) {
 
-        cout << (i+1) << ',';
+        cout << (i + 1) << ',';
         output_percentage(cout, total_read_count, base_sum[i].A);
         cout << ',';
         output_percentage(cout, total_read_count, base_sum[i].T);
@@ -1197,7 +1194,6 @@ int fastq_stats(vector<string> params) {
     return 0;
 }
 
-
 int fastq_quals(vector<string> params) {
     string usage_text = "Usage: " + PROG_NAME + " fastq_quals <FASTQ_file> <offset>\n"
             + "Offset typically 33 (illumina 1.8+,sanger) or 64 (illumina 1.3+)\n"
@@ -1212,7 +1208,7 @@ int fastq_quals(vector<string> params) {
     string filename = params[0];
     int offset = strTo<int>(params[1]);
 
-    
+
     ifstream infile;
 
     infile.open(filename.c_str(), ios::in);
@@ -1235,33 +1231,32 @@ int fastq_quals(vector<string> params) {
             continue;
         }
 
-        if(!line.qual_exist){
+        if (!line.qual_exist) {
             cerr << "Error: no qualities..." << '\n';
             return 1;
         }
-        
+
         int len = (int) line.seq.length();
-        
-        if(len != (int)line.qual.length() || (int)line.qual.length() == 0){
+
+        if (len != (int) line.qual.length() || (int) line.qual.length() == 0) {
             cerr << "Error: mismatched quality len: " << line.name << '\n';
             continue;
         }
-        
-        cout << (int)(line.qual[0] - offset);
-        
-        for (int i = 1;i < (int)line.qual.length(); i++){
-            cout << '\t' << (int)(line.qual[i] - offset) ;
+
+        cout << (int) (line.qual[0] - offset);
+
+        for (int i = 1; i < (int) line.qual.length(); i++) {
+            cout << '\t' << (int) (line.qual[i] - offset);
         }
-        
+
         cout << "\n";
-                
+
 
     }
 
 
     return 0;
 }
-
 
 int sam_quals(vector<string> params) {
     string usage_text = "Usage: " + PROG_NAME + " sam_quals <SAM_file> <offset>\n"
@@ -1277,17 +1272,17 @@ int sam_quals(vector<string> params) {
     string filename = params[0];
     int offset = strTo<int>(params[1]);
 
-    vector<string> prefix = split(filename,'.');
-    
+    vector<string> prefix = split(filename, '.');
+
     ifstream infile;
     int num_lines = 0;
-    
+
     infile.open(filename.c_str(), ios::in);
 
     if (!infile.is_open()) {
         cerr << "Error: cannot open input file: " << filename << '\n';
         return 3;
-    }else{
+    } else {
         // count the number of lines in the file
         string temp;
         while (std::getline(infile, temp)) {
@@ -1297,89 +1292,88 @@ int sam_quals(vector<string> params) {
 
     infile.close();
     cerr << "Number of lines: " << num_lines << '\n';
-    
-    string out_name = prefix[0]+"_qual_0.txt";
-    ofstream out_file(out_name.c_str(),ios::out);
-    
+
+    string out_name = prefix[0] + "_qual_0.txt";
+    ofstream out_file(out_name.c_str(), ios::out);
+
     infile.open(filename.c_str(), ios::in);
     string line = "";
     int idx = 0;
     int lines_read = 0;
     while (!infile.eof()) {
-        getline(infile,line);
-        
+        getline(infile, line);
+
         trim2(line);
-        
-        if(line.length() < 1){
-            continue;            
-        }
-        
-        int lines_left = num_lines - idx;
-        
-        if(line[0] == '@'){
+
+        if (line.length() < 1) {
             continue;
         }
-        
-        if(lines_read > 2500000 && lines_left >= 2500000){
+
+        int lines_left = num_lines - idx;
+
+        if (line[0] == '@') {
+            continue;
+        }
+
+        if (lines_read > 2500000 && lines_left >= 2500000) {
             out_file.close();
             lines_read = 0;
-            string out_name = prefix[0]+"_qual_"+toStr<int>(idx)+".txt";
-            out_file.open(out_name.c_str(),ios::out);
+            string out_name = prefix[0] + "_qual_" + toStr<int>(idx) + ".txt";
+            out_file.open(out_name.c_str(), ios::out);
         }
 
         vector<string> line_list = split(line);
-        
-        if(line_list.size() < 10){
+
+        if (line_list.size() < 10) {
             cerr << "Bad line: " << line << '\n';
             continue;
         }
-        
+
         // get flag
         int flag = strTo<int>(line_list[1]);
-        
-        
+
+
         // get quality value
         string quals = line_list[10];
-        
+
         // invert if necessary
         bool invert = false;
-        
-        if(!((flag & 4) && (flag & 8))){
+
+        if (!((flag & 4) && (flag & 8))) {
             // at least on read is mapped
-            if(flag & 64){
+            if (flag & 64) {
                 // first in pair
                 invert = flag & 16;
-            }else if(flag & 128){
+            } else if (flag & 128) {
                 // second in pair
                 invert = (!(flag & 16));
             }
-            
+
         }
-        
-        if(invert){
-            reverse(quals.begin(),quals.end());
+
+        if (invert) {
+            reverse(quals.begin(), quals.end());
         }
-        
+
         // print it out
-        
-        out_file << (int)(quals[0] - offset);
-        
-        for (int i = 1;i < (int)quals.length(); i++){
-            out_file << ' ' << (int)(quals[i] - offset) ;
+
+        out_file << (int) (quals[0] - offset);
+
+        for (int i = 1; i < (int) quals.length(); i++) {
+            out_file << ' ' << (int) (quals[i] - offset);
         }
-        
+
         out_file << "\n";
-                
+
         idx++;
         lines_read++;
     }
-    
+
     out_file.close();
 
 
     return 0;
 }
-
 
 int replace_sam_quals(vector<string> params) {
     string usage_text = "Usage: " + PROG_NAME + " replace_sam_quals [-e] <SAM_file> <offset> <quals_file>\n"
@@ -1392,15 +1386,15 @@ int replace_sam_quals(vector<string> params) {
         cerr << usage_text << endl;
         return 3;
     }
-    
+
     bool take_log = false;
     int param_offset = 0;
-    
-    if(params.size() == 4){
-        if(params[0] == "-e"){
+
+    if (params.size() == 4) {
+        if (params[0] == "-e") {
             take_log = true;
             param_offset = 1;
-        }else{
+        } else {
             cerr << usage_text << endl;
             return 3;
         }
@@ -1409,7 +1403,7 @@ int replace_sam_quals(vector<string> params) {
     string filename = params[0 + param_offset];
     int offset = strTo<int>(params[1 + param_offset]);
     string quals_filename = params[2 + param_offset];
-    
+
     ifstream infile;
 
     infile.open(quals_filename.c_str(), ios::in);
@@ -1420,7 +1414,7 @@ int replace_sam_quals(vector<string> params) {
     }
 
     infile.close();
-    
+
 
     infile.open(filename.c_str(), ios::in);
 
@@ -1432,120 +1426,120 @@ int replace_sam_quals(vector<string> params) {
     infile.close();
 
 
-    
+
     ifstream infile2;
     infile2.open(quals_filename.c_str(), ios::in);
     string line = "";
     string line2 = "";
-    
+
     infile.open(filename.c_str(), ios::in);
-    
+
 
     while (!infile.eof() && !infile2.eof()) {
-        getline(infile,line);
-        
+        getline(infile, line);
+
         trim2(line);
-        
-        if(line.length() < 1){
-            continue;            
+
+        if (line.length() < 1) {
+            continue;
         }
-        
-        if(line[0] == '@'){
+
+        if (line[0] == '@') {
             cout << line << '\n';
             continue;
         }
 
         vector<string> line_list = split(line);
-        
-        if(line_list.size() < 10){
+
+        if (line_list.size() < 10) {
             cerr << "Bad line: " << line << '\n';
             cout << line << '\n';
             continue;
         }
-        
+
         // read the quals
-        getline(infile2,line2);
+        getline(infile2, line2);
         trim2(line2);
-        
-        if(line2.length() < 1){
+
+        if (line2.length() < 1) {
             cerr << "Bad quals file..." << '\n';
             cerr << line << '\n';
             cerr << line2 << '\n';
             return 1;
         }
-        
+
         vector<string> line_list2 = split(line2);
-        
+
         string new_quals = "";
-        for(vector<string>::iterator ll = line_list2.begin();
-                ll != line_list2.end();ll++){
-            
+        for (vector<string>::iterator ll = line_list2.begin();
+                ll != line_list2.end(); ll++) {
+
             int val = 0;
-            if(take_log){
-                val = (int)round(-10 * log(strTo<double>(*ll)));
-            }else{
-                val = (int)round(strTo<double>(*ll));
+            if (take_log) {
+                val = (int) round(-10 * log(strTo<double>(*ll)));
+            } else {
+                val = (int) round(strTo<double>(*ll));
             }
-            
-            if(val <= 0 || val >= 255){
-                cerr << "ERROR: bad quals("<< val <<"|" << *ll <<"): " << line2 << '\n';
+
+            if (val <= 0 || val >= 255) {
+                cerr << "ERROR: bad quals(" << val << "|" << *ll << "): " << line2 << '\n';
             }
-            
-            if(val < 2){
+
+            if (val < 2) {
                 val = 2;
-            }else if(val > 40){
+            } else if (val > 40) {
                 val = 40;
             }
-            
+
             val += offset;
-            
-            
-            
-            
-            
-            new_quals.push_back((char)val);
-            
+
+
+
+
+
+            new_quals.push_back((char) val);
+
         }
-        
+
         // get flag
         int flag = strTo<int>(line_list[1]);
-        
-       
-        
+
+
+
         // invert if necessary
         bool invert = false;
-        
-        if(!((flag & 4) && (flag & 8))){
+
+        if (!((flag & 4) && (flag & 8))) {
             // at least on read is mapped
-            if(flag & 64){
+            if (flag & 64) {
                 // first in pair
                 invert = flag & 16;
-            }else if(flag & 128){
+            } else if (flag & 128) {
                 // second in pair
                 invert = (!(flag & 16));
             }
-            
+
         }
-        
-        if(invert){
-            reverse(new_quals.begin(),new_quals.end());
+
+        if (invert) {
+            reverse(new_quals.begin(), new_quals.end());
         }
-        
+
         // print it out
-        
+
         line_list[10] = new_quals;
-        
+
         cout << line_list[0];
-        
-        for (int i = 1;i < (int)line_list.size(); i++){
-            cout << '\t' << line_list[i] ;
+
+        for (int i = 1; i < (int) line_list.size(); i++) {
+            cout << '\t' << line_list[i];
         }
-        
+
         cout << "\n";
-                
+
 
     }
-    
+
     infile.close();
     infile2.close();
 
@@ -1554,6 +1548,7 @@ int replace_sam_quals(vector<string> params) {
 }
 
 // temp thing for annoying thing
+
 int replace_sam_quals_diff(vector<string> params) {
     string usage_text = "Usage: " + PROG_NAME + " replace_sam_quals_diff [-e] <SAM_file> <window_size> <offset> <quals_file>\n"
             + "    -e    -- de-Exponentiate first\n"
@@ -1564,25 +1559,25 @@ int replace_sam_quals_diff(vector<string> params) {
         cerr << usage_text << endl;
         return 3;
     }
-    
+
     bool take_log = false;
     int offset = 0;
-    
-    if(params.size() == 5){
-        if(params[0] == "-e"){
+
+    if (params.size() == 5) {
+        if (params[0] == "-e") {
             take_log = true;
             offset = 1;
-        }else{
+        } else {
             cerr << usage_text << endl;
             return 3;
         }
     }
 
     string filename = params[0 + offset];
-    int wsize  = strTo<int>(params[1 + offset]);
-    int qual_offset  = strTo<int>(params[2 + offset]);
+    int wsize = strTo<int>(params[1 + offset]);
+    int qual_offset = strTo<int>(params[2 + offset]);
     string quals_filename = params[3 + offset];
-    
+
     ifstream infile;
 
     infile.open(quals_filename.c_str(), ios::in);
@@ -1593,7 +1588,7 @@ int replace_sam_quals_diff(vector<string> params) {
     }
 
     infile.close();
-    
+
 
     infile.open(filename.c_str(), ios::in);
 
@@ -1605,157 +1600,155 @@ int replace_sam_quals_diff(vector<string> params) {
     infile.close();
 
 
-    
+
     ifstream infile2;
     infile2.open(quals_filename.c_str(), ios::in);
     string line = "";
     string line2 = "";
-    
+
     infile.open(filename.c_str(), ios::in);
-    
+
 
     while (!infile.eof() && !infile2.eof()) {
-        getline(infile,line);
-        
+        getline(infile, line);
+
         trim2(line);
-        
-        if(line.length() < 1){
-            continue;            
+
+        if (line.length() < 1) {
+            continue;
         }
-        
-        if(line[0] == '@'){
+
+        if (line[0] == '@') {
             cout << line << '\n';
             continue;
         }
 
         vector<string> line_list = split(line);
-        
-        if(line_list.size() < 10){
+
+        if (line_list.size() < 10) {
             cerr << "Bad line: " << line << '\n';
             cout << line << '\n';
             continue;
         }
-        
+
         // read the quals
-        getline(infile2,line2);
+        getline(infile2, line2);
         trim2(line2);
-        
-        if(line2.length() < 1){
+
+        if (line2.length() < 1) {
             cerr << "Bad quals file..." << '\n';
             cerr << line << '\n';
             cerr << line2 << '\n';
             return 1;
         }
-        
+
         vector<string> line_list2 = split(line2);
-        
+
         string new_quals = "";
-        for(vector<string>::iterator ll = line_list2.begin();
-                ll != line_list2.end();ll++){
+        for (vector<string>::iterator ll = line_list2.begin();
+                ll != line_list2.end(); ll++) {
 
             int val = 0;
-            if(take_log){
-                val = (int)round(-10.0*log(strTo<double>(*ll)));
-            }else{
-                val = (int)round(strTo<double>(*ll));
+            if (take_log) {
+                val = (int) round(-10.0 * log(strTo<double>(*ll)));
+            } else {
+                val = (int) round(strTo<double>(*ll));
             }
-            new_quals.push_back((char)val);
+            new_quals.push_back((char) val);
         }
-        
+
         // get flag
         int flag = strTo<int>(line_list[1]);
-        
-       
-        
+
+
+
         // invert if necessary
         bool invert = false;
-        
-        if(!((flag & 4) && (flag & 8))){
+
+        if (!((flag & 4) && (flag & 8))) {
             // at least on read is mapped
-            if(flag & 64){
+            if (flag & 64) {
                 // first in pair
                 invert = flag & 16;
-            }else if(flag & 128){
+            } else if (flag & 128) {
                 // second in pair
                 invert = (!(flag & 16));
             }
-            
+
         }
-        
-        if(invert){
-            reverse(new_quals.begin(),new_quals.end());
+
+        if (invert) {
+            reverse(new_quals.begin(), new_quals.end());
         }
-        
+
         // do the diff
-        int llen = (int)line_list[10].size();
-        int num_wind = llen/wsize;
-        
+        int llen = (int) line_list[10].size();
+        int num_wind = llen / wsize;
+
         bool last_wind = false;
-        if(num_wind * wsize != llen){
+        if (num_wind * wsize != llen) {
             last_wind = true;
         }
-        
-        for(int i = 0;i<num_wind;i++){
-            
+
+        for (int i = 0; i < num_wind; i++) {
+
             int offset = i*wsize;
-            int noffset = i*(wsize-1);
-            for(int j = 1;j<wsize;j++){
-                int new_val = line_list[10][offset+j-1]+new_quals[noffset+j-1];
-                
-                if(new_val-qual_offset <0){
+            int noffset = i * (wsize - 1);
+            for (int j = 1; j < wsize; j++) {
+                int new_val = line_list[10][offset + j - 1] + new_quals[noffset + j - 1];
+
+                if (new_val - qual_offset < 0) {
                     new_val = qual_offset;
                 }
-                
-                if(new_val-qual_offset >40){
-                    new_val = qual_offset+40;
+
+                if (new_val - qual_offset > 40) {
+                    new_val = qual_offset + 40;
                 }
 
-                
-                line_list[10][offset+j] = new_val;
+
+                line_list[10][offset + j] = new_val;
             }
         }
-        
-        if(last_wind){
+
+        if (last_wind) {
             int old_wsize = wsize;
             wsize = llen - num_wind * old_wsize;
-            
+
             int offset = num_wind*old_wsize;
-            int noffset = num_wind*(old_wsize-1);
-            for(int j = 1;j<wsize;j++){
-                
-                int new_val = line_list[10][offset+j-1]+new_quals[noffset+j-1];
-                
-                if(new_val-qual_offset <0){
+            int noffset = num_wind * (old_wsize - 1);
+            for (int j = 1; j < wsize; j++) {
+
+                int new_val = line_list[10][offset + j - 1] + new_quals[noffset + j - 1];
+
+                if (new_val - qual_offset < 0) {
                     new_val = qual_offset;
                 }
-                
-                if(new_val-qual_offset >40){
-                    new_val = qual_offset+40;
+
+                if (new_val - qual_offset > 40) {
+                    new_val = qual_offset + 40;
                 }
 
-                line_list[10][offset+j] = new_val;
+                line_list[10][offset + j] = new_val;
             }
         }
-        
+
         cout << line_list[0];
-        
-        for (int i = 1;i < (int)line_list.size(); i++){
-            cout << '\t' << line_list[i] ;
+
+        for (int i = 1; i < (int) line_list.size(); i++) {
+            cout << '\t' << line_list[i];
         }
-        
+
         cout << "\n";
-                
+
 
     }
-    
+
     infile.close();
     infile2.close();
 
 
     return 0;
 }
-
-
 
 int quant_sam_quals(vector<string> params) {
     string usage_text = "Usage: " + PROG_NAME + " quant_sam_quals <SAM_file> <offset> <quant_levels>\n"
@@ -1765,7 +1758,7 @@ int quant_sam_quals(vector<string> params) {
 
     const int LOW = 4;
     const int HIGH = 41;
-    
+
     if (params.size() != 3) {
         cerr << usage_text << endl;
         return 3;
@@ -1774,27 +1767,27 @@ int quant_sam_quals(vector<string> params) {
     string filename = params[0];
     int offset = strTo<int>(params[1]);
     int quant_levels = strTo<int>(params[2]);
-    
-    if(quant_levels < 2 || quant_levels >= 15){
+
+    if (quant_levels < 2 || quant_levels >= 15) {
         cerr << "Error: too few/many quant levels\n";
         return 2;
     }
-    
-    vector<int> levels(quant_levels,0);
-    
+
+    vector<int> levels(quant_levels, 0);
+
     levels[0] = LOW;
-    levels[levels.size()-1] = HIGH;
+    levels[levels.size() - 1] = HIGH;
 
     if (quant_levels >= 3) {
-        
-        int gap = (int)(((double)HIGH-LOW)/((double)quant_levels-1));
-        
+
+        int gap = (int) (((double) HIGH - LOW) / ((double) quant_levels - 1));
+
         int len = (int) levels.size() - 1;
         for (int i = 1; i < len; i++) {
-            levels[i] = levels[i-1]+gap;
+            levels[i] = levels[i - 1] + gap;
         }
     }
-    
+
     ifstream infile;
 
     infile.open(filename.c_str(), ios::in);
@@ -1808,80 +1801,309 @@ int quant_sam_quals(vector<string> params) {
 
 
     string line = "";
-    
+
     infile.open(filename.c_str(), ios::in);
-    
+
 
     while (!infile.eof()) {
-        getline(infile,line);
-        
+        getline(infile, line);
+
         trim2(line);
-        
-        if((int)line.length() < 1){
-            continue;            
+
+        if ((int) line.length() < 1) {
+            continue;
         }
-        
-        if(line[0] == '@'){
+
+        if (line[0] == '@') {
             cout << line << '\n';
             continue;
         }
 
         vector<string> line_list = split(line);
-        
-        if(line_list.size() < 10){
+
+        if (line_list.size() < 10) {
             cerr << "Bad line: " << line << '\n';
             cout << line << '\n';
             continue;
         }
-        
+
 
         // quantize
         string new_quals = line_list[10];
-       
-        int len = (int)new_quals.length();
-        for (int i = 0;i<len;i++){
-            int qual = new_quals[i]-offset;
-            
-            
-            int diff = abs(qual-levels[0]);
+
+        int len = (int) new_quals.length();
+        for (int i = 0; i < len; i++) {
+            int qual = new_quals[i] - offset;
+
+
+            int diff = abs(qual - levels[0]);
             int val = 0;
-            for(int j = 1;j<quant_levels;j++){
-                int new_diff = abs(qual-levels[j]);
-                
-                if(new_diff > diff){
-                    val = j-1;
+            for (int j = 1; j < quant_levels; j++) {
+                int new_diff = abs(qual - levels[j]);
+
+                if (new_diff > diff) {
+                    val = j - 1;
                     break;
-                }else{
+                } else {
                     val = j;
                     diff = new_diff;
                 }
             }
-            
-            new_quals[i] = (char)(levels[val]+offset);
-            
+
+            new_quals[i] = (char) (levels[val] + offset);
+
         }
-       
-        
+
+
         // print it out
-        
+
         line_list[10] = new_quals;
-        
+
         cout << line_list[0];
-        
-        for (int i = 1;i < (int)line_list.size(); i++){
-            cout << '\t' << line_list[i] ;
+
+        for (int i = 1; i < (int) line_list.size(); i++) {
+            cout << '\t' << line_list[i];
         }
-        
+
         cout << "\n";
-                
+
 
     }
-    
+
     infile.close();
 
     return 0;
 }
 
+struct vcf_data {
+    uint32_t pos;
+    char alleles[2];
+    double qual;
+
+    vcf_data() {
+        pos = 0;
+        qual = 0.0;
+        alleles[0] = 0;
+        alleles[1] = 0;
+    }
+
+    bool operator<(const vcf_data &a)const {
+        return pos < a.pos;
+    }
+};
+
+void read_snp_vcf(string filename, vector<vcf_data> &vcf) {
+
+    string line;
+
+    ifstream infile(filename.c_str(), ios::in);
+    while (!infile.eof()) {
+        getline(infile, line);
+        trim2(line);
+        if (line.length() == 0) continue;
+        if (line[0] == '#') continue;
+
+        vector<string> ll = split(line);
+        uint32_t pos = strTo<uint32_t>(ll[1]);
+        string ref = ll[3];
+        string alt = ll[4];
+        double qual = strTo<double>(ll[5]);
+        char type0 = ll[9][0];
+        char type1 = ll[9][2];
+
+        if (ref.length() > 1) {
+            cerr << "Something wrong (ref): " << line << '\n';
+            continue;
+        }
+
+        if (!(alt.length() == 1 || (alt.length() == 3 && alt[2] == ','))) {
+            cerr << "Something wrong (alt): " << line << '\n';
+            continue;
+        }
+
+        vcf_data contents;
+        contents.pos = pos;
+        contents.qual = qual;
+        if (type0 == '0') {
+            contents.alleles[0] = ref[0];
+            if (type1 == '0') {
+                contents.alleles[1] = ref[0];
+            } else if (type1 == '1') {
+                contents.alleles[1] = alt[0];
+            } else {
+                cerr << "Something wrong (type0): " << line << '\n';
+                continue;
+            }
+        } else if (type0 == '1') {
+            contents.alleles[0] = alt[0];
+            if (type1 == '1') {
+                contents.alleles[1] = alt[0];
+            } else if (type1 == '2') {
+                contents.alleles[1] = alt[2];
+            } else {
+                cerr << "Something wrong (type1): " << line << '\n';
+                continue;
+            }
+        } else {
+            cerr << "Something wrong (type): " << line << '\n';
+            continue;
+        }
+
+        vcf.push_back(contents);
+
+    }
+}
+
+int compare_vcf(vector<string> params) {
+    string usage_text = "Usage: " + PROG_NAME + " compare_vcf <orig_VCF_file> <new_VCF_file>\n"
+            + "Find differences in vcf file, single chromosome";
+
+    if (params.size() != 2) {
+        cerr << usage_text << endl;
+        return 3;
+    }
+
+    string orig_vcf_filename = params[0];
+
+    ifstream infile;
+    infile.open(orig_vcf_filename.c_str(), ios::in);
+    if (!infile.is_open()) {
+        cerr << "Error: cannot open input file: " << orig_vcf_filename << '\n';
+        return 3;
+    }
+    infile.close();
+
+    string new_vcf_filename = params[1];
+    infile.open(new_vcf_filename.c_str(), ios::in);
+    if (!infile.is_open()) {
+        cerr << "Error: cannot open input file: " << new_vcf_filename << '\n';
+        return 3;
+    }
+    infile.close();
+
+    // read in the vcf files
+    vector<vcf_data> orig_vcf;
+    vector<vcf_data> new_vcf;
+
+    read_snp_vcf(orig_vcf_filename, orig_vcf);
+    read_snp_vcf(new_vcf_filename, new_vcf);
+
+    sort(orig_vcf.begin(), orig_vcf.end());
+    sort(new_vcf.begin(), new_vcf.end());
+
+    // get some stats from the vcf files
+
+    cout << "qual_cut" << '\t'
+            << "orig_total_snps" << '\t'
+            << "new_total_snps" << '\t'
+            << "unique_to_orig_snps" << '\t'
+            << "unique_to_new_snps" << '\t'
+            << "in_both_snps" << '\t'
+            << "new_is_het_wrong" << '\t'
+            << "new_is_hom_wrong" << '\t'
+            << "new_allele_wrong" << '\n';
+
+    for (int qual_cut = 0; qual_cut <= 200; qual_cut += 5) {
+        int orig_total_snps = 0;
+        int new_total_snps = 0;
+
+        int unique_to_orig_snps = 0;
+        int unique_to_new_snps = 0;
+        int in_both_snps = 0;
+
+        int new_is_het_wrong = 0;
+        int new_is_hom_wrong = 0;
+        int new_allele_wrong = 0;
+
+        size_t orig_idx = 0;
+        size_t new_idx = 0;
+
+        while (orig_idx < orig_vcf.size()
+                || new_idx < new_vcf.size()) {
+            bool only_orig = false;
+            bool only_new = false;
+
+            if (orig_idx == orig_vcf.size()) {
+                only_new = true;
+            } else if (new_idx == new_vcf.size()) {
+                only_orig = true;
+            } else {
+                if (orig_vcf[orig_idx].pos < new_vcf[new_idx].pos) {
+                    only_orig = true;
+                } else if (orig_vcf[orig_idx].pos > new_vcf[new_idx].pos) {
+                    only_new = true;
+                }
+            }
+
+            if (only_orig) {
+                if (orig_vcf[orig_idx].qual >= qual_cut) {
+                    orig_total_snps++;
+                    unique_to_orig_snps++;
+                }
+                orig_idx++;
+            } else if (only_new) {
+                if (new_vcf[new_idx].qual >= qual_cut) {
+                    new_total_snps++;
+                    unique_to_new_snps++;
+                }
+                new_idx++;
+            } else {
+                if (orig_vcf[orig_idx].qual >= qual_cut
+                        && new_vcf[new_idx].qual >= qual_cut) {
+                    orig_total_snps++;
+                    new_total_snps++;
+                    in_both_snps++;
+
+                    if (orig_vcf[orig_idx].alleles[0] == orig_vcf[orig_idx].alleles[1]) {
+                        // hom
+                        if (new_vcf[new_idx].alleles[0] != new_vcf[new_idx].alleles[1]) {
+                            new_is_het_wrong++;
+                        } else {
+                            if (orig_vcf[orig_idx].alleles[0] != new_vcf[new_idx].alleles[0]) {
+                                new_allele_wrong++;
+                            }
+                        }
+                    } else {
+                        // het
+                        if (new_vcf[new_idx].alleles[0] == new_vcf[new_idx].alleles[1]) {
+                            new_is_hom_wrong++;
+                        } else {
+                            if (!((orig_vcf[orig_idx].alleles[0] == new_vcf[new_idx].alleles[0]
+                                    && orig_vcf[orig_idx].alleles[1] == new_vcf[new_idx].alleles[1])
+                                    || (orig_vcf[orig_idx].alleles[0] == new_vcf[new_idx].alleles[1]
+                                    && orig_vcf[orig_idx].alleles[1] == new_vcf[new_idx].alleles[0]))) {
+                                new_allele_wrong++;
+                            }
+                        }
+                    }
+
+                } else if (orig_vcf[orig_idx].qual >= qual_cut) {
+                    orig_total_snps++;
+                    unique_to_orig_snps++;
+                } else if (new_vcf[new_idx].qual >= qual_cut) {
+                    new_total_snps++;
+                    unique_to_new_snps++;
+                }
+                orig_idx++;
+                new_idx++;
+            }
+
+            // output stats
+            cout << qual_cut << '\t'
+                    << orig_total_snps << '\t'
+                    << new_total_snps << '\t'
+                    << unique_to_orig_snps << '\t'
+                    << unique_to_new_snps << '\t'
+                    << in_both_snps << '\t'
+                    << new_is_het_wrong << '\t'
+                    << new_is_hom_wrong << '\t'
+                    << new_allele_wrong << '\n';
+        }
+    }
+
+
+    return 0;
+}
 
 int sam_stats(vector<string> params) {
     string usage_text = "Usage: " + PROG_NAME + " sam_stats <SAM_file>\n"
@@ -1914,18 +2136,18 @@ int sam_stats(vector<string> params) {
     // some stats to remember
     int num_reads = 0;
     int num_reads_aligned = 0;
-    map<int,int> mapq_count; // count for each MAPQ
-    map<int,int> edit_count; // count for each edit distance
-    map<int,int> gap_ext_count; // count for each gap_extend
-    map<int,int> mm_count; // count for each mismatch
+    map<int, int> mapq_count; // count for each MAPQ
+    map<int, int> edit_count; // count for each edit distance
+    map<int, int> gap_ext_count; // count for each gap_extend
+    map<int, int> mm_count; // count for each mismatch
 
 
-    map<string,int> chr_count;    // count aligned to each chromosome
-    map<string,int> chr_count_20; // count aligned to each chromosome (MAPQ>20)
+    map<string, int> chr_count; // count aligned to each chromosome
+    map<string, int> chr_count_20; // count aligned to each chromosome (MAPQ>20)
 
 
     while (!in.eof()) {
-        getline(in,line);
+        getline(in, line);
 
         trim2(line);
 
@@ -1935,22 +2157,22 @@ int sam_stats(vector<string> params) {
 
         //cerr << line[0] << "\n";
 
-        if(line[0] == '@') continue;
+        if (line[0] == '@') continue;
 
         vector<string> line_list = split(line);
-        map<int,int>::iterator it;
+        map<int, int>::iterator it;
 
 
 
 
-        if(line_list.size() < 5){
+        if (line_list.size() < 5) {
             continue;
         }
 
         //cerr << line_list[5] << ':';
         //cerr << line_list[5][0] << ':';
 
-        if(line_list[5][0] != '*'){
+        if (line_list[5][0] != '*') {
             num_reads_aligned++;
 
             //cerr << num_reads_aligned << '\n';
@@ -1960,15 +2182,15 @@ int sam_stats(vector<string> params) {
 
             it = mapq_count.find(mapq);
 
-            if(it == mapq_count.end()){
-                mapq_count.insert(pair<int,int>(mapq,1));
-            }else{
+            if (it == mapq_count.end()) {
+                mapq_count.insert(pair<int, int>(mapq, 1));
+            } else {
                 it->second++;
             }
 
-            for(int i = 11;i<(int)line_list.size();i++){
-                if(line_list[i].size() >= 6){
-                    if(line_list[i][0] == 'N' && line_list[i][1] == 'M'){
+            for (int i = 11; i < (int) line_list.size(); i++) {
+                if (line_list[i].size() >= 6) {
+                    if (line_list[i][0] == 'N' && line_list[i][1] == 'M') {
                         int edit = strTo<int>(line_list[i].substr(5));
 
                         it = edit_count.find(edit);
@@ -1978,7 +2200,7 @@ int sam_stats(vector<string> params) {
                         } else {
                             it->second++;
                         }
-                    }else if(line_list[i][0] == 'X' && line_list[i][1] == 'G'){
+                    } else if (line_list[i][0] == 'X' && line_list[i][1] == 'G') {
                         int ext = strTo<int>(line_list[i].substr(5));
 
                         it = gap_ext_count.find(ext);
@@ -1988,7 +2210,7 @@ int sam_stats(vector<string> params) {
                         } else {
                             it->second++;
                         }
-                    }else if(line_list[i][0] == 'X' && line_list[i][1] == 'M'){
+                    } else if (line_list[i][0] == 'X' && line_list[i][1] == 'M') {
                         int mm = strTo<int>(line_list[i].substr(5));
 
                         it = mm_count.find(mm);
@@ -2002,14 +2224,14 @@ int sam_stats(vector<string> params) {
                 }
             }
 
-            map<string,int>::iterator it2;
+            map<string, int>::iterator it2;
 
 
             it2 = chr_count.find(line_list[2]);
 
-            if(it2 == chr_count.end()){
-                chr_count.insert(pair<string,int>(line_list[2],1));
-            }else{
+            if (it2 == chr_count.end()) {
+                chr_count.insert(pair<string, int>(line_list[2], 1));
+            } else {
                 it2->second++;
             }
 
@@ -2043,7 +2265,7 @@ int sam_stats(vector<string> params) {
 
     vector<chr_idx_t> temp_vec;
 
-    for(map<string,int>::iterator it = chr_count.begin();it != chr_count.end();it++){
+    for (map<string, int>::iterator it = chr_count.begin(); it != chr_count.end(); it++) {
 
         chr_idx_t contents;
 
@@ -2053,17 +2275,17 @@ int sam_stats(vector<string> params) {
         temp_vec.push_back(contents);
     }
 
-    sort(temp_vec.begin(),temp_vec.end());
+    sort(temp_vec.begin(), temp_vec.end());
 
     cout << "Chromosome count (chr_name,count): " << '\n';
     cout << temp_vec.size() << '\n';
-    for(vector<chr_idx_t>::iterator it = temp_vec.begin();it != temp_vec.end();it++){
+    for (vector<chr_idx_t>::iterator it = temp_vec.begin(); it != temp_vec.end(); it++) {
         cout << it->name << ',' << it->count << '\n';
     }
 
 
     temp_vec.clear();
-    for(map<string,int>::iterator it = chr_count_20.begin();it != chr_count_20.end();it++){
+    for (map<string, int>::iterator it = chr_count_20.begin(); it != chr_count_20.end(); it++) {
 
         chr_idx_t contents;
 
@@ -2073,36 +2295,36 @@ int sam_stats(vector<string> params) {
         temp_vec.push_back(contents);
     }
 
-    sort(temp_vec.begin(),temp_vec.end());
+    sort(temp_vec.begin(), temp_vec.end());
 
     cout << "MAPQ 20 Chromosome count[MAPQ>=20] (chr_name,count): " << '\n';
     cout << temp_vec.size() << '\n';
-    for(vector<chr_idx_t>::iterator it = temp_vec.begin();it != temp_vec.end();it++){
+    for (vector<chr_idx_t>::iterator it = temp_vec.begin(); it != temp_vec.end(); it++) {
         cout << it->name << ',' << it->count << '\n';
     }
 
 
     cout << "MAPQ (MAPQ,count):" << '\n';
     cout << mapq_count.size() << '\n';
-    for(map<int,int>::iterator it = mapq_count.begin();it != mapq_count.end();it++){
+    for (map<int, int>::iterator it = mapq_count.begin(); it != mapq_count.end(); it++) {
         cout << it->first << ',' << it->second << '\n';
     }
 
     cout << "Edit distance (edits,count):" << '\n';
     cout << edit_count.size() << '\n';
-    for(map<int,int>::iterator it = edit_count.begin();it != edit_count.end();it++){
+    for (map<int, int>::iterator it = edit_count.begin(); it != edit_count.end(); it++) {
         cout << it->first << ',' << it->second << '\n';
     }
 
     cout << "Gap extension length (ext_len,count):" << '\n';
-    cout <<  gap_ext_count.size() << '\n';
-    for(map<int,int>::iterator it = gap_ext_count.begin();it != gap_ext_count.end();it++){
+    cout << gap_ext_count.size() << '\n';
+    for (map<int, int>::iterator it = gap_ext_count.begin(); it != gap_ext_count.end(); it++) {
         cout << it->first << ',' << it->second << '\n';
     }
 
     cout << "Mismatch number (mismatch,count):" << '\n';
     cout << mm_count.size() << '\n';
-    for(map<int,int>::iterator it = mm_count.begin();it != mm_count.end();it++){
+    for (map<int, int>::iterator it = mm_count.begin(); it != mm_count.end(); it++) {
         cout << it->first << ',' << it->second << '\n';
     }
 
@@ -2332,7 +2554,6 @@ int fastq_filter(vector<string> params) {
     return 0;
 }
 
-
 int fq_len_filter(vector<string> params) {
     string usage_text = "Usage: " + PROG_NAME + " fq_len_filter <min_len> <output_prefix> <first_pair> [<second_pair>]\n"
             + "    min_len        -- Pairs with one end shorter than this will be removed\n"
@@ -2461,7 +2682,7 @@ int fq_len_filter(vector<string> params) {
         bool passed = true; // if read passes criteria then we output
 
         for (int i = 0; i < num_pair; i++) {
-            if((int)line[i].seq.length() < min_len){
+            if ((int) line[i].seq.length() < min_len) {
                 passed = false;
             }
 
@@ -2523,7 +2744,6 @@ int fq_len_filter(vector<string> params) {
 
     return 0;
 }
-
 
 int sample_reads(vector<string> params) {
     string usage_text = "Usage: " + PROG_NAME + " sample_reads <num_reads> <output_prefix> <first_pair> [<second_pair>]\n"
@@ -3004,7 +3224,6 @@ int subseq(vector<string> params) {
 
 }
 
-
 int select_haps(vector<string> params) {
     string usage_text = "Usage: " + PROG_NAME + " select_haps <hap_file_prefix> <test_size> [seed]\n"
             + "    hap_file           -- File with the haplotypes\n"
@@ -3021,17 +3240,17 @@ int select_haps(vector<string> params) {
 
     string hap_prefix = params[0];
     int number_test = strTo<int>(params[1]);
-    
-    if(number_test <= 0){
+
+    if (number_test <= 0) {
         cerr << "Must have at least one test\n";
         //return 2;
     }
-    
+
     uint64_t seed = 0;
-    if(params.size() == 3){
+    if (params.size() == 3) {
         seed = strTo<int>(params[2]);
     }
-    
+
     MT_random randgen(seed);
 
     { // Check each of the files can be opened
@@ -3050,7 +3269,7 @@ int select_haps(vector<string> params) {
             return 1;
         }
         sample_file.close();
-        
+
         temp = hap_prefix + ".legend";
         ifstream legned_file(temp.c_str(), ios::in);
         if (!legned_file.is_open()) {
@@ -3068,17 +3287,17 @@ int select_haps(vector<string> params) {
         string temp = hap_prefix + ".hap";
         ifstream hap_file(temp.c_str(), ios::in);
 
-        while(getline(hap_file,temp)){
+        while (getline(hap_file, temp)) {
             trim2(temp);
-            
-            if(temp.length() == 0){
+
+            if (temp.length() == 0) {
                 continue;
             }
             all_haps.push_back(vector<char>());
             vector < vector<char> >::iterator it = all_haps.end();
             it--;
-            for (int i = 0;i<(int)temp.length();i=i+4){
-                switch(temp[i]){
+            for (int i = 0; i < (int) temp.length(); i = i + 4) {
+                switch (temp[i]) {
                     case '0':
                         it->push_back(temp[i]);
                         break;
@@ -3095,38 +3314,38 @@ int select_haps(vector<string> params) {
         }
         hap_file.close();
     }
-    
+
     // check if we have enough individuals
-    int num_ind = (int)all_haps[0].size();
-    int num_snp = (int)all_haps.size();
-    
-    if(num_ind < number_test*2){
+    int num_ind = (int) all_haps[0].size();
+    int num_snp = (int) all_haps.size();
+
+    if (num_ind < number_test * 2) {
         cerr << "Not enough individuals for testing: " << num_ind << '\n';
         return 2;
     }
 
     // read in the sample file
-    
+
     vector<string> all_samples;
     {
         string temp = hap_prefix + ".sample";
         ifstream sample_file(temp.c_str(), ios::in);
 
         // get the header line
-        getline(sample_file,temp);
-        
-        while(getline(sample_file,temp)){
+        getline(sample_file, temp);
+
+        while (getline(sample_file, temp)) {
             trim2(temp);
-            
-            if(temp.length() == 0){
+
+            if (temp.length() == 0) {
                 continue;
             }
             all_samples.push_back(temp);
         }
-        
+
         sample_file.close();
     }
-    
+
     // read in the legend file
     vector<vector<string> > all_legend;
     all_legend.reserve(num_snp);
@@ -3135,32 +3354,32 @@ int select_haps(vector<string> params) {
         ifstream legend_file(temp.c_str(), ios::in);
 
         // get the header line
-        getline(legend_file,temp);
-        
-        while(getline(legend_file,temp)){
+        getline(legend_file, temp);
+
+        while (getline(legend_file, temp)) {
             trim2(temp);
-            
-            if(temp.length() == 0){
+
+            if (temp.length() == 0) {
                 continue;
             }
-            
+
             vector<string> ll = split(temp);
-            
+
             all_legend.push_back(ll);
         }
-        
+
         legend_file.close();
     }
-    
-    
-    
+
+
+
     // sample without replacement the test set indexes
-    
-    int num_test_ind = number_test*2;
+
+    int num_test_ind = number_test * 2;
     vector<int> indexes;
 
     {
-        for (int k = 0;k<num_ind;k++) {
+        for (int k = 0; k < num_ind; k++) {
 
             if (k <= num_test_ind) {
                 indexes.push_back(k);
@@ -3173,16 +3392,16 @@ int select_haps(vector<string> params) {
             }
         }
     }
-    sort(indexes.begin(),indexes.end());
-    
-    
+    sort(indexes.begin(), indexes.end());
+
+
     // output the training set files
     {
-        string temp = "train_"+ hap_prefix +".hap";
-        
+        string temp = "train_" + hap_prefix + ".hap";
+
         ofstream hap_file(temp.c_str(), ios::out);
-        
-        for(int i = 0;i<num_snp;i++) {
+
+        for (int i = 0; i < num_snp; i++) {
 
             bool first_one = true;
             for (int k = 0; k < num_ind; k++) {
@@ -3192,42 +3411,42 @@ int select_haps(vector<string> params) {
                 }
 
                 char h = all_haps[i][k];
-                
-                if(first_one) {
+
+                if (first_one) {
                     hap_file << h << ' ' << h;
                     first_one = false;
                 } else {
                     hap_file << ' ' << h << ' ' << h;
                 }
-                
+
             }
-            
+
             hap_file << '\n';
         }
-        
+
         hap_file.close();
-        
-        temp = "train_"+hap_prefix +".sample";
-        
+
+        temp = "train_" + hap_prefix + ".sample";
+
         ofstream sample_file(temp.c_str(), ios::out);
         sample_file << "sample population group sex\n";
-        for(int k = 0; k < num_ind; k++){
-            
-            if(binary_search(indexes.begin(),indexes.end(),k)){
+        for (int k = 0; k < num_ind; k++) {
+
+            if (binary_search(indexes.begin(), indexes.end(), k)) {
                 continue;
             }
-            
+
             sample_file << all_samples[k] << '\n';
         }
         sample_file.close();
     }
     // output the true test samples
     vector<int> perm_indexes = indexes;
-    random_shuffle(perm_indexes.begin(),perm_indexes.end());
-    
+    random_shuffle(perm_indexes.begin(), perm_indexes.end());
+
     {
-        string temp = "true_"+hap_prefix +".hap";
-        
+        string temp = "true_" + hap_prefix + ".hap";
+
         ofstream hap_file(temp.c_str(), ios::out);
 
         for (int i = 0; i < num_snp; i++) {
@@ -3245,51 +3464,51 @@ int select_haps(vector<string> params) {
                 } else {
                     hap_file << ' ';
                 }
-                
+
                 hap_file << h;
 
             }
             hap_file << '\n';
         }
-        
+
         hap_file.close();
-        
-        temp = "true_"+hap_prefix +".sample";
-        
+
+        temp = "true_" + hap_prefix + ".sample";
+
         ofstream sample_file(temp.c_str(), ios::out);
         sample_file << "sample population group sex\n";
-        for(int k = 0; k < num_ind; k++){
-            
-            if(!binary_search(indexes.begin(),indexes.end(),k)){
+        for (int k = 0; k < num_ind; k++) {
+
+            if (!binary_search(indexes.begin(), indexes.end(), k)) {
                 continue;
             }
-            
+
             sample_file << all_samples[k] << '\n';
         }
         sample_file.close();
     }
-    
+
     // output the test samples for input into the program
     // need to output in gen/sample format
     {
-        
-        int test_pair[2] = {0,0};
 
-        
-        string temp = "test_"+hap_prefix+".gen";
+        int test_pair[2] = {0, 0};
+
+
+        string temp = "test_" + hap_prefix + ".gen";
 
         ofstream gen_file(temp.c_str(), ios::out);
 
         for (int i = 0; i < num_snp; i++) {
             bool first_one = true;
-            
+
             // output SNP details
             // always output chr24...
             gen_file << "24 ";
-            
+
             gen_file << all_legend[i][0] << ' ' << all_legend[i][1] << ' ';
             gen_file << all_legend[i][2] << ' ' << all_legend[i][3] << ' ';
-            
+
             int test_idx = 0;
 
             for (int k = 0; k < num_ind; k++) {
@@ -3305,70 +3524,68 @@ int select_haps(vector<string> params) {
                 if (p == 1) {
                     char h1 = all_haps[i][test_pair[0]];
                     char h2 = all_haps[i][test_pair[1]];
-                    
-                    if(first_one){
+
+                    if (first_one) {
                         first_one = false;
-                    }else{
+                    } else {
                         gen_file << ' ';
                     }
-                    if(h1 != h2){
+                    if (h1 != h2) {
                         gen_file << "0 1 0";
-                    }else if(h1 == '0'){
+                    } else if (h1 == '0') {
                         gen_file << "1 0 0";
-                    }else if(h1 == '1'){
+                    } else if (h1 == '1') {
                         gen_file << "0 0 1";
-                    }else{
+                    } else {
                         gen_file << "0 0 0";
                     }
-                    
+
                 }
 
                 test_idx++;
             }
-            
+
             gen_file << '\n';
         }
         gen_file.close();
-        
-        
-        
-        temp = "test_"+hap_prefix+".sample"; // this sample file is fake
-        
-        vector<string> pair_temp(2,"");
-        
+
+
+
+        temp = "test_" + hap_prefix + ".sample"; // this sample file is fake
+
+        vector<string> pair_temp(2, "");
+
         ofstream sample_file(temp.c_str(), ios::out);
-        
-        sample_file << "ID_1 ID_2 missing\n"; 
-        sample_file << "0 0 0\n"; 
-        
+
+        sample_file << "ID_1 ID_2 missing\n";
+        sample_file << "0 0 0\n";
+
         int test_idx = 0;
-        
-        for(int k = 0; k < num_ind; k++){
-            
-            if(!binary_search(indexes.begin(),indexes.end(),k)){
+
+        for (int k = 0; k < num_ind; k++) {
+
+            if (!binary_search(indexes.begin(), indexes.end(), k)) {
                 continue;
             }
-            
+
             vector<string> ll = split(all_samples[k]);
-            
+
             int p = test_idx % 2;
             pair_temp[p] = ll[0];
-            
+
             if (p == 1) {
- 
+
                 sample_file << pair_temp[0] << ' ' << pair_temp[1] << " 0\n";
-               
+
             }
             test_idx++;
         }
         sample_file.close();
     }
-    
+
     return 0;
 
 }
-
-
 
 int vcf_to_hap(vector<string> params) {
     string usage_text = "Usage: " + PROG_NAME + " vcf_to_hap <vcf_file>\n"
@@ -3384,113 +3601,113 @@ int vcf_to_hap(vector<string> params) {
     }
 
     vcf_filename = params[0];
-    
+
     {
-        ifstream vcf_file(vcf_filename.c_str(),ios::in);
-        if(!vcf_file.is_open()){
+        ifstream vcf_file(vcf_filename.c_str(), ios::in);
+        if (!vcf_file.is_open()) {
             cerr << "Could not open VCF file\n";
             return 1;
         }
         vcf_file.close();
     }
-    
+
     vector<string> ind_list;
     int num_snp = 0;
-    
+
     {
         string temp = "";
-        ifstream vcf_file(vcf_filename.c_str(),ios::in);
-        
-        while(getline(vcf_file,temp)){
+        ifstream vcf_file(vcf_filename.c_str(), ios::in);
+
+        while (getline(vcf_file, temp)) {
             trim2(temp);
-            if(temp.length()<2){
+            if (temp.length() < 2) {
                 continue;
             }
-            if(temp[0]=='#' && temp[1] == '#'){
+            if (temp[0] == '#' && temp[1] == '#') {
                 continue;
             }
-            if(temp[0] == '#'){
+            if (temp[0] == '#') {
                 // we read in the individuals now
                 vector<string> ll = split(temp);
-                for(int i=9;i< (int)ll.size();i++){
+                for (int i = 9; i < (int) ll.size(); i++) {
                     ind_list.push_back(ll[i]);
                 }
-                
+
                 continue;
             }
-            
+
             num_snp++;
-            
-            if(num_snp % 10000 == 0){
+
+            if (num_snp % 10000 == 0) {
                 cerr << "Reading SNP: " << num_snp << '\n';
             }
         }
-        
+
         vcf_file.close();
     }
-    
-    int num_ind = (int)ind_list.size();
-    
+
+    int num_ind = (int) ind_list.size();
+
     cerr << "Number of SNPs: " << num_snp << '\n';
     cerr << "Number of individuals: " << num_ind << '\n';
     cerr << "-------------\n";
-    
+
     vector<vector<vector<int> > > snp_list;
     vector<vector<string> > lib_list;
 
 
-    {  // initialise snp_list
-        
-        
+    { // initialise snp_list
+
+
         snp_list.reserve(num_snp);
-        
+
     }
-    
+
     { // read in the SNPs
         vector<int> empty;
         empty.push_back(-1);
         empty.push_back(-1);
-        
+
         string temp = "";
-        ifstream vcf_file(vcf_filename.c_str(),ios::in);
-        
+        ifstream vcf_file(vcf_filename.c_str(), ios::in);
+
         int snp_idx = 0;
-        
+
         int count = 0;
-        
-        while(getline(vcf_file,temp)){
+
+        while (getline(vcf_file, temp)) {
             count++;
-            if (count % 10000 == 0){
+            if (count % 10000 == 0) {
                 cerr << "Reading line: " << count << '\n';
             }
 
             trim2(temp);
-            if(temp.length()<2){
+            if (temp.length() < 2) {
                 continue;
             }
-            if(temp[0]=='#'){
+            if (temp[0] == '#') {
                 continue;
             }
-            
+
             vector<string> ll = split(temp);
-            
-            if(ll[4].length()>1){
+
+            if (ll[4].length() > 1) {
                 continue; // multi-allellic loci
             }
-            
+
             vector<string> contents;
             contents.push_back(ll[0]); // chr_name
             contents.push_back(ll[1]); // chr_loc
-            
-            if(ll[2][0]=='.'){
-                ll[2] = "SNP_"+toStr<int>(snp_idx);
+
+            if (ll[2][0] == '.') {
+                ll[2] = "SNP_" + toStr<int>(snp_idx);
             }
             contents.push_back(ll[2]); // snp_id
             contents.push_back(ll[3]); // allele1
             contents.push_back(ll[4]); // allele2
-            
+
             cerr << "---" << ll[1] << "\n";
-            
+
             snp_list.push_back(vector<vector<int> >());
             vector<vector<vector<int> > >::iterator it = snp_list.end();
             it--;
@@ -3498,49 +3715,49 @@ int vcf_to_hap(vector<string> params) {
             for (int j = 0; j < num_ind; j++) {
                 it->push_back(empty);
             }
-            
-            for(int i = 9;i<(int)ll.size();i++){
-                string snpl = ll[i];
-                
-                if(!(snpl[0] == '.')){
-                    snp_list[snp_idx][i-9][0] = snpl[0]-48;
-                    snp_list[snp_idx][i-9][1] = snpl[2]-48;
 
-                    if (i == 9){
+            for (int i = 9; i < (int) ll.size(); i++) {
+                string snpl = ll[i];
+
+                if (!(snpl[0] == '.')) {
+                    snp_list[snp_idx][i - 9][0] = snpl[0] - 48;
+                    snp_list[snp_idx][i - 9][1] = snpl[2] - 48;
+
+                    if (i == 9) {
                         cerr << "SNP string: " << snpl << '\n';
                         cerr << (int) snp_list[snp_idx][i - 9][0] << ","
-                            << snp_list[snp_idx][i - 9][1] << '\n';
-                        if(snpl[0] != snpl[2]){
+                                << snp_list[snp_idx][i - 9][1] << '\n';
+                        if (snpl[0] != snpl[2]) {
                             cerr << "HETT\n";
                         }
                     }
-                    
+
                 }
-                
+
 
             }
-            
+
             lib_list.push_back(contents);
-            
+
             snp_idx++;
-            
-            if(num_snp % 10000 == 0){
+
+            if (num_snp % 10000 == 0) {
                 cerr << "Reading SNP: " << num_snp << " : " << ll[2] << '\n';
             }
         }
-        
+
         vcf_file.close();
-        
+
         num_snp = snp_idx;
     }
-    
+
     cerr << "Total SNPs read: " << num_snp << '\n';
-    
-    vector<double> het_ratio(num_ind,0.0);
-    vector<double> mis_ratio(num_ind,0.0);
-    
+
+    vector<double> het_ratio(num_ind, 0.0);
+    vector<double> mis_ratio(num_ind, 0.0);
+
     {// determine males and females
-        for(int i = 0;i < num_snp; i++) {
+        for (int i = 0; i < num_snp; i++) {
             for (int j = 0; j < num_ind; j++) {
                 if (snp_list[i][j][0] >= 0) {
                     if (snp_list[i][j][0] != snp_list[i][j][1]) {
@@ -3551,53 +3768,53 @@ int vcf_to_hap(vector<string> params) {
                 }
             }
         }
-        
-        for(int j = 0;j<num_ind;j++){
-            if((num_snp - mis_ratio[j]) == 0){
+
+        for (int j = 0; j < num_ind; j++) {
+            if ((num_snp - mis_ratio[j]) == 0) {
                 het_ratio[j] = 1;
-            }else{
-                het_ratio[j] = het_ratio[j]/(num_snp-mis_ratio[j]);
+            } else {
+                het_ratio[j] = het_ratio[j] / (num_snp - mis_ratio[j]);
             }
-            mis_ratio[j] = mis_ratio[j]/num_snp;
+            mis_ratio[j] = mis_ratio[j] / num_snp;
         }
-        
+
         // output the ratio
         string temp = vcf_filename + "_ind_stats.txt";
-        ofstream stats_file(temp.c_str(),ios::out);
-        for(int j = 0;j<num_ind;j++){
+        ofstream stats_file(temp.c_str(), ios::out);
+        for (int j = 0; j < num_ind; j++) {
             stats_file << het_ratio[j] << '\t' << mis_ratio[j] << '\n';
         }
         stats_file.close();
-                
+
     }
-    
-    vector<char> bad_ind(num_ind,0);
+
+    vector<char> bad_ind(num_ind, 0);
 
     {
-        for(int j = 0;j<num_ind;j++){
-            if(het_ratio[j]>0.01){
+        for (int j = 0; j < num_ind; j++) {
+            if (het_ratio[j] > 0.01) {
                 bad_ind[j] = 1;
                 cerr << "Female Individual: " << j << '\n';
             }
-            if(mis_ratio[j] > 0.05){
+            if (mis_ratio[j] > 0.05) {
                 bad_ind[j] = 1;
                 cerr << "Bad Missing Individual: " << j << "\n";
             }
-        }    
+        }
     }
-    
-    vector<double> snp_het_ratio(num_snp,0.0);
-    vector<double> snp_mis_ratio(num_snp,0.0);
+
+    vector<double> snp_het_ratio(num_snp, 0.0);
+    vector<double> snp_mis_ratio(num_snp, 0.0);
     int num_good_ind = 0;
-    
+
     {
-        for(int i = 0;i < num_snp; i++) {
+        for (int i = 0; i < num_snp; i++) {
             for (int j = 0; j < num_ind; j++) {
-                
-                if(bad_ind[j] > 0){
+
+                if (bad_ind[j] > 0) {
                     continue;
                 }
-                
+
                 if (snp_list[i][j][0] >= 0) {
                     if (snp_list[i][j][0] != snp_list[i][j][1]) {
                         snp_het_ratio[i]++;
@@ -3620,57 +3837,57 @@ int vcf_to_hap(vector<string> params) {
 
         for (int i = 0; i < num_snp; i++) {
             if (num_good_ind - snp_mis_ratio[i] > 0) {
-                snp_het_ratio[i] = snp_het_ratio[i]/(num_good_ind - snp_mis_ratio[i]);
+                snp_het_ratio[i] = snp_het_ratio[i] / (num_good_ind - snp_mis_ratio[i]);
             } else {
                 snp_het_ratio[i] = 1;
             }
-            
+
             snp_mis_ratio[i] = snp_mis_ratio[i] / num_good_ind;
         }
-        
+
         // output the ratio
         string temp = vcf_filename + "_snp_stats.txt";
-        ofstream stats_file(temp.c_str(),ios::out);
-        for(int i = 0; i < num_snp; i++){
+        ofstream stats_file(temp.c_str(), ios::out);
+        for (int i = 0; i < num_snp; i++) {
             stats_file << snp_het_ratio[i] << '\t' << snp_mis_ratio[i] << '\n';
         }
         stats_file.close();
-        
+
     }
-    
-    vector<char> bad_snp(num_snp,0);
+
+    vector<char> bad_snp(num_snp, 0);
     int num_bad_snp = 0;
     {
-        for(int i = 0;i<num_snp;i++){
-            if(snp_het_ratio[i] > 0.05){
+        for (int i = 0; i < num_snp; i++) {
+            if (snp_het_ratio[i] > 0.05) {
                 bad_snp[i] = 1;
             }
-            if(snp_mis_ratio[i] > 0.05){
+            if (snp_mis_ratio[i] > 0.05) {
                 bad_snp[i] = 1;
             }
-            
-            if(bad_snp[i] > 0){
+
+            if (bad_snp[i] > 0) {
                 num_bad_snp++;
             }
-        }    
-        
-        cerr << "Number of good SNPs: " << (num_snp-num_bad_snp) << "/" << num_snp << '\n';
+        }
+
+        cerr << "Number of good SNPs: " << (num_snp - num_bad_snp) << "/" << num_snp << '\n';
     }
-    
+
     { // write hap file
         string temp = vcf_filename + ".hap";
-        ofstream out_file(temp.c_str(),ios::out);
-        for(int i = 0;i<num_snp;i++){
-            if(bad_snp[i] > 0){
+        ofstream out_file(temp.c_str(), ios::out);
+        for (int i = 0; i < num_snp; i++) {
+            if (bad_snp[i] > 0) {
                 continue;
             }
-            
-            for(int j = 0; j < num_ind; j++){
-                if(bad_ind[j] > 0){
+
+            for (int j = 0; j < num_ind; j++) {
+                if (bad_ind[j] > 0) {
                     continue;
                 }
-                
-                if(j!=0){
+
+                if (j != 0) {
                     out_file << ' ';
                 }
                 if (snp_list[i][j][0] >= 0) {
@@ -3687,13 +3904,13 @@ int vcf_to_hap(vector<string> params) {
         }
         out_file.close();
     }
-    
+
     { // write SAMPLE file
         string temp = vcf_filename + ".sample";
-        ofstream out_file(temp.c_str(),ios::out);
+        ofstream out_file(temp.c_str(), ios::out);
         out_file << "sample population group sex\n";
-        for(int j = 0; j < num_ind; j++){
-            if(bad_ind[j] > 0){
+        for (int j = 0; j < num_ind; j++) {
+            if (bad_ind[j] > 0) {
                 continue;
             }
             out_file << ind_list[j] << " CEU EUR 1\n";
@@ -3705,22 +3922,20 @@ int vcf_to_hap(vector<string> params) {
         string temp = vcf_filename + ".legend";
         ofstream out_file(temp.c_str(), ios::out);
         out_file << "id position a0 a1\n";
-        for(int i = 0;i<num_snp;i++){
-            if(bad_snp[i] > 0){
+        for (int i = 0; i < num_snp; i++) {
+            if (bad_snp[i] > 0) {
                 continue;
             }
-            out_file << lib_list[i][2] << ' ' << lib_list[i][1] << ' ' 
+            out_file << lib_list[i][2] << ' ' << lib_list[i][1] << ' '
                     << lib_list[i][3] << ' ' << lib_list[i][4] << '\n';
         }
         out_file.close();
     }
-    
-    
+
+
     return 0;
 
 }
-
-
 
 void print_usage_and_exit() {
     cerr << "Usage: " + PROG_NAME + " <option>" << "\n";
@@ -3737,6 +3952,7 @@ void print_usage_and_exit() {
     cerr << "  fastq_quals       -- Get some qualities from a FASTQ file" << "\n";
     cerr << "  sam_quals         -- Get some qualities from a SAM file" << "\n";
     cerr << "  replace_sam_quals -- Replace qualities in a SAM file" << "\n";
+    cerr << "  compare_vcf       -- Find differences between two VCF files after compression" << "\n";
     cerr << "  quant_sam_quals   -- Quantize some qualities from a SAM file" << "\n";
     cerr << "  depth_stats       -- Get some statistics from a samtools depth file" << "\n";
     cerr << "  sam_stats         -- Get some statistics from a SAM file" << "\n";
