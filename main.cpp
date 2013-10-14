@@ -1764,7 +1764,7 @@ int quant_sam_quals(vector<string> params) {
 
 
     const int LOW = 4;
-    const int HIGH = 40;
+    const int HIGH = 41;
     
     if (params.size() != 3) {
         cerr << usage_text << endl;
@@ -1848,7 +1848,7 @@ int quant_sam_quals(vector<string> params) {
             for(int j = 1;j<quant_levels;j++){
                 int new_diff = abs(qual-levels[j]);
                 
-                if(new_diff >= diff){
+                if(new_diff > diff){
                     val = j-1;
                     break;
                 }else{
@@ -1857,7 +1857,7 @@ int quant_sam_quals(vector<string> params) {
                 }
             }
             
-            new_quals[i] = levels[val]+offset;
+            new_quals[i] = (char)(levels[val]+offset);
             
         }
        
