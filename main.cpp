@@ -1259,7 +1259,7 @@ int fastq_quals(vector<string> params) {
 }
 
 int sam_quals(vector<string> params) {
-    string usage_text = "Usage: " + PROG_NAME + " sam_quals <SAM_file> <offset>\n"
+    string usage_text = "Usage: " + PROG_NAME + " sam_quals <SAM_file> <offset> \n"
             + "Offset typically 33 (illumina 1.8+,sanger) or 64 (illumina 1.3+)\n"
             + "Get quals from a SAM file normalized and orientation corrected";
 
@@ -1331,7 +1331,6 @@ int sam_quals(vector<string> params) {
 
         // get flag
         int flag = strTo<int>(line_list[1]);
-
 
         // get quality value
         string quals = line_list[10];
@@ -1874,6 +1873,8 @@ int quant_sam_quals(vector<string> params) {
 
     return 0;
 }
+
+
 
 struct vcf_data {
     uint32_t pos;
